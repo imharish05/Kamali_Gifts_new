@@ -246,7 +246,7 @@ export default function Brands({ showToast }) {
                 }}
                 onClear={handleClearImage}
                 validation={logoDimensions}
-                requirements="300×120px • Max: 3MB (Common Image Formats)"
+                requirements="Recommended 300×120px • Max: 3MB"
                 accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/bmp,image/tiff,image/x-icon,image/heic,image/heif,image/avif"
               />
 

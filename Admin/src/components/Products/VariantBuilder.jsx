@@ -23,10 +23,10 @@ const VARIANT_IMAGE_RULES = {
 
 const validateVariantImage = (file) => {
   return new Promise((resolve) => {
-    if (file.size > VARIANT_IMAGE_RULES.maxFileSize) {
-      resolve({ valid: false, error: `File too large. Max 3MB. Yours: ${(file.size / 1024 / 1024).toFixed(2)}MB` });
-      return;
-    }
+    // if (file.size > VARIANT_IMAGE_RULES.maxFileSize) {
+    //   resolve({ valid: false, error: `File too large. Max 3MB. Yours: ${(file.size / 1024 / 1024).toFixed(2)}MB` });
+    //   return;
+    // }
     if (!VARIANT_IMAGE_RULES.formats.includes(file.type)) {
       resolve({ valid: false, error: `Invalid format. Use common image formats (JPG, PNG, WebP, GIF, SVG, BMP, TIFF, ICO, HEIC, HEIF, AVIF). Yours: ${file.type || 'unknown'}` });
       return;
@@ -38,10 +38,10 @@ const validateVariantImage = (file) => {
         const { width, height } = img;
         const ratio = width / height;
         const diff = Math.abs(ratio - VARIANT_IMAGE_RULES.aspectRatio) / VARIANT_IMAGE_RULES.aspectRatio;
-        if (diff > VARIANT_IMAGE_RULES.tolerance) {
-          resolve({ valid: false, error: `Wrong ratio. Use 5:6 (${VARIANT_IMAGE_RULES.width}×${VARIANT_IMAGE_RULES.height}px). Yours: ${width}×${height}px` });
-          return;
-        }
+        // if (diff > VARIANT_IMAGE_RULES.tolerance) {
+        //   resolve({ valid: false, error: `Wrong ratio. Use 5:6 (${VARIANT_IMAGE_RULES.width}×${VARIANT_IMAGE_RULES.height}px). Yours: ${width}×${height}px` });
+        //   return;
+        // }
         resolve({ valid: true });
       };
       img.src = e.target.result;
@@ -609,7 +609,7 @@ function SkuRow({ sku, index, onChange, onDelete, errors = [] }) {
 
       {/* Image upload — big zone */}
       <div style={{ flexShrink: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: KM.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Image • 800×960px (5:6) • Max: 3MB (Common Image Formats)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: KM.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Recommanded Image • 800×960px (5:6)</div>
         <input ref={imgRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/bmp,image/tiff,image/x-icon,image/heic,image/heif,image/avif" style={{ display: 'none' }} onChange={handleImg} />
         {sku.imagePreview ? (
           <div style={{ position: 'relative', width: 90, height: 90 }}>

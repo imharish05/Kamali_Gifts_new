@@ -25,7 +25,7 @@ const CATEGORY_IMAGE_DIMENSIONS = {
 
 const validateCategoryImageDimensions = (file) => {
   return new Promise((resolve) => {
-    // Check file size
+    // Only validate file size and format — no dimension enforcement
     if (file.size > CATEGORY_IMAGE_DIMENSIONS.maxFileSize) {
       resolve({
         valid: false,
@@ -33,8 +33,6 @@ const validateCategoryImageDimensions = (file) => {
       });
       return;
     }
-
-    // Check file format
     if (!CATEGORY_IMAGE_DIMENSIONS.formats.includes(file.type)) {
       resolve({
         valid: false,
@@ -42,34 +40,7 @@ const validateCategoryImageDimensions = (file) => {
       });
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const { width, height } = img;
-        const actualRatio = width / height;
-        const expectedRatio = CATEGORY_IMAGE_DIMENSIONS.aspectRatio;
-        const ratioDiff = Math.abs(actualRatio - expectedRatio) / expectedRatio;
-
-        // Check aspect ratio (1:1 square)
-        if (ratioDiff > CATEGORY_IMAGE_DIMENSIONS.tolerance) {
-          resolve({
-            valid: false,
-            error: `Incorrect aspect ratio. Use 1:1 square (${CATEGORY_IMAGE_DIMENSIONS.width}×${CATEGORY_IMAGE_DIMENSIONS.height}px). Yours: ${width}×${height}px`,
-            dimensions: { width, height },
-          });
-          return;
-        }
-
-        resolve({
-          valid: true,
-          dimensions: { width, height },
-        });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    resolve({ valid: true });
   });
 };
 
@@ -264,7 +235,7 @@ const handleDelete = async (catId) => {
                 }}
                 onClear={handleClearImage}
                 validation={imageDimensions}
-                requirements="400×400px (1:1) • Max: 3MB (JPG/WebP)"
+                requirements="Recommended 400×400px (1:1) • Max: 3MB"
               />
 
               {/* Properly Aligned Form Actions */}

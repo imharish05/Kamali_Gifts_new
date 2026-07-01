@@ -78,7 +78,7 @@ TestimonialSlider.propTypes = {
 };
 
 TestimonialSlider.defaultProps = {
-  title: "Happy Tales from Parents & Kids",
+  title: "The Feedback Behind the Festivities",
   subtitle: "What families say about our personalized gifts & stationery",
 };
 

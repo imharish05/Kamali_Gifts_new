@@ -30,7 +30,7 @@ const COMBO_IMAGE_DIMENSIONS = {
   ],
 };
 
-const COMBO_IMAGE_REQUIREMENTS = "800×960px (5:6) • Max: 3MB (Common Image Formats)";
+const COMBO_IMAGE_REQUIREMENTS = "Recommended 800×960px (5:6) • Max: 3MB";
 
 const countWords = (text) => {
   return text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
@@ -42,6 +42,7 @@ const DESC_LIMITS = {
 };
 
 const validateComboImageDimensions = (file) => new Promise((resolve) => {
+  // Only validate file size and format — no dimension enforcement
   if (file.size > COMBO_IMAGE_DIMENSIONS.maxFileSize) {
     resolve({
       valid: false,
@@ -49,7 +50,6 @@ const validateComboImageDimensions = (file) => new Promise((resolve) => {
     });
     return;
   }
-
   if (!COMBO_IMAGE_DIMENSIONS.formats.includes(file.type)) {
     resolve({
       valid: false,
@@ -57,34 +57,7 @@ const validateComboImageDimensions = (file) => new Promise((resolve) => {
     });
     return;
   }
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      const { width, height } = img;
-      const expectedRatio = COMBO_IMAGE_DIMENSIONS.aspectRatio;
-      const ratioDiff = Math.abs((width / height) - expectedRatio) / expectedRatio;
-
-      if (ratioDiff > COMBO_IMAGE_DIMENSIONS.tolerance) {
-        resolve({
-          valid: false,
-          error: `Incorrect aspect ratio. Use 5:6 portrait (${COMBO_IMAGE_DIMENSIONS.width}×${COMBO_IMAGE_DIMENSIONS.height}px). Yours: ${width}×${height}px`,
-          dimensions: { width, height },
-        });
-        return;
-      }
-
-      resolve({
-        valid: true,
-        dimensions: { width, height },
-      });
-    };
-    img.onerror = () => resolve({ valid: false, error: "Could not read image dimensions." });
-    img.src = e.target.result;
-  };
-  reader.onerror = () => resolve({ valid: false, error: "Could not read image file." });
-  reader.readAsDataURL(file);
+  resolve({ valid: true });
 });
 
 // ── Helper: Get all selected product-variant combinations ──────────────────────

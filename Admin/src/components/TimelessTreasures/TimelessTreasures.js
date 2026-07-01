@@ -36,6 +36,7 @@ const BANNER_DIMENSIONS = {
 
 const validateImageDimensions = (file) => {
   return new Promise((resolve) => {
+    // Only validate file size and format — no dimension enforcement
     if (file.size > BANNER_DIMENSIONS.maxFileSize) {
       resolve({ valid: false, error: `File too large. Max: 3MB. You have: ${(file.size / 1024 / 1024).toFixed(2)}MB` });
       return;
@@ -44,33 +45,7 @@ const validateImageDimensions = (file) => {
       resolve({ valid: false, error: `Invalid format. Use common image formats (JPG, PNG, WebP, GIF, SVG, BMP, TIFF, ICO, HEIC, HEIF, AVIF). You uploaded: ${file.type || 'unknown'}` });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const { width, height } = img;
-        const actualRatio = width / height;
-        const expectedRatio = BANNER_DIMENSIONS.aspectRatio;
-        const ratioDiff = Math.abs(actualRatio - expectedRatio) / expectedRatio;
-
-        // Check aspect ratio
-        if (ratioDiff > BANNER_DIMENSIONS.tolerance) {
-          resolve({
-            valid: false,
-            error: `Incorrect aspect ratio. Use 16:9 (${BANNER_DIMENSIONS.width}×${BANNER_DIMENSIONS.height}px). Yours: ${width}×${height}px`,
-            dimensions: { width, height },
-          });
-          return;
-        }
-
-        resolve({
-          valid: true,
-          dimensions: { width, height },
-        });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    resolve({ valid: true });
   });
 };
 
@@ -325,12 +300,12 @@ export default function TimelessTreasures({ showToast }) {
           <div className="km-form-body">
             <form className="km-form-grid" onSubmit={handleSubmit}>
 
-              {/* Image upload — full width */}
+               {/* Image upload — full width */}
               <div className="km-field km-field-full">
                 <label className="km-label">
                   Banner Image {!editingId && <span style={{ color: '#ef4444' }}>*</span>}
                   <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 8 }}>
-                    {BANNER_DIMENSIONS.width}×{BANNER_DIMENSIONS.height}px (16:9) • Max: 3MB
+                    Recommended {BANNER_DIMENSIONS.width}×{BANNER_DIMENSIONS.height}px (16:9) • Max: 3MB
                   </span>
                 </label>
                 <div className="upload-grid-wrapper">

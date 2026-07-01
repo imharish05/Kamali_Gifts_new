@@ -44,6 +44,7 @@ const TESTIMONIAL_IMAGE_CONFIG = {
 
 const validateImageDimensions = (file) =>
   new Promise((resolve) => {
+    // Only validate file size and format — no dimension enforcement
     if (file.size > TESTIMONIAL_IMAGE_CONFIG.maxFileSize) {
       resolve({ valid: false, error: `File too large. Max: 3MB. You have: ${(file.size / 1024 / 1024).toFixed(2)}MB` });
       return;
@@ -52,21 +53,7 @@ const validateImageDimensions = (file) =>
       resolve({ valid: false, error: `Invalid format. Use common image formats (JPG, PNG, WebP, GIF, SVG, BMP, TIFF, ICO, HEIC, HEIF, AVIF). You uploaded: ${file.type || 'unknown'}` });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const { width, height } = img;
-        const ratioDiff = Math.abs(width / height - TESTIMONIAL_IMAGE_CONFIG.aspectRatio) / TESTIMONIAL_IMAGE_CONFIG.aspectRatio;
-        if (ratioDiff > TESTIMONIAL_IMAGE_CONFIG.tolerance) {
-          resolve({ valid: false, error: `Incorrect aspect ratio. Use 1:1 square (${TESTIMONIAL_IMAGE_CONFIG.width}×${TESTIMONIAL_IMAGE_CONFIG.height}px). Yours: ${width}×${height}px`, dimensions: { width, height } });
-          return;
-        }
-        resolve({ valid: true, dimensions: { width, height } });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    resolve({ valid: true });
   });
 
 const validateField = (field, value) => {
@@ -244,7 +231,7 @@ export default function Testimonials({ showToast }) {
                 }}
                 onClear={handleClearImage}
                 validation={imageDimensions}
-                requirements="300×300px (1:1) • Max: 3MB (Common Image Formats)"
+                requirements="Recommended 300×300px (1:1) • Max: 3MB"
                 accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/bmp,image/tiff,image/x-icon,image/heic,image/heif,image/avif"
               />
 

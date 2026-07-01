@@ -24,7 +24,7 @@ const EVENT_IMAGE_DIMENSIONS = {
 
 const validateEventImageDimensions = (file) => {
   return new Promise((resolve) => {
-    // Check file size
+    // Only validate file size and format — no dimension enforcement
     if (file.size > EVENT_IMAGE_DIMENSIONS.maxFileSize) {
       resolve({
         valid: false,
@@ -32,8 +32,6 @@ const validateEventImageDimensions = (file) => {
       });
       return;
     }
-
-    // Check file format
     if (!EVENT_IMAGE_DIMENSIONS.formats.includes(file.type)) {
       resolve({
         valid: false,
@@ -41,34 +39,7 @@ const validateEventImageDimensions = (file) => {
       });
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const { width, height } = img;
-        const actualRatio = width / height;
-        const expectedRatio = EVENT_IMAGE_DIMENSIONS.aspectRatio;
-        const ratioDiff = Math.abs(actualRatio - expectedRatio) / expectedRatio;
-
-        // Check aspect ratio (1:1 square)
-        if (ratioDiff > EVENT_IMAGE_DIMENSIONS.tolerance) {
-          resolve({
-            valid: false,
-            error: `Incorrect aspect ratio. Use 1:1 square (${EVENT_IMAGE_DIMENSIONS.width}×${EVENT_IMAGE_DIMENSIONS.height}px). Yours: ${width}×${height}px`,
-            dimensions: { width, height },
-          });
-          return;
-        }
-
-        resolve({
-          valid: true,
-          dimensions: { width, height },
-        });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    resolve({ valid: true });
   });
 };
 
@@ -264,7 +235,7 @@ export default function EventCategories({ showToast }) {
               </div>
 
               <div className="km-field km-field-full">
-                <label className="km-label">Event Image • 400×400px (1:1) • Max: 3MB (JPG/WebP)</label>
+                <label className="km-label">Event Image • Recommended 400×400px (1:1) • Max: 3MB</label>
                 <div className="upload-grid-wrapper">
                   <div
                     className={`drop-zone-area ${imageFile ? 'active-file' : ''} ${dragActive ? 'drag-active' : ''}`}
