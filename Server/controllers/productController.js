@@ -387,9 +387,18 @@ const createProduct = async (req, res, next) => {
     // create Variant rows
     for (let i = 0; i < parsedVariants.length; i++) {
       const v = parsedVariants[i];
-      // variant image: uploaded as variantImage_<idx>
-      const vImgFile = req.files ? req.files.find(f => f.fieldname === `variantImage_${i}`) : null;
-      const vImage   = vImgFile ? `uploads/products/${vImgFile.filename}` : (v.image || null);
+      const vImgFiles = req.files ? req.files.filter(f => f.fieldname === `variantImages_${i}`) : [];
+      const newUploadedPaths = vImgFiles.map(f => `uploads/products/${f.filename}`);
+      
+      let vImages = [];
+      if (Array.isArray(v.existingImages)) {
+        vImages = v.existingImages;
+      } else if (v.image) {
+        vImages = Array.isArray(v.image) ? v.image : [v.image];
+      }
+      
+      const finalImages = [...vImages, ...newUploadedPaths];
+
       await Variant.create({
         productId:   product.id,
         variantName: v.variantName,
@@ -400,7 +409,7 @@ const createProduct = async (req, res, next) => {
         sku:         v.sku || generateSku("KMV"),
         attributes:  v.attributes || [],
         status:      v.status || "Active",
-        image:       vImage,
+        image:       finalImages,
       });
     }
 
@@ -490,7 +499,7 @@ const updateProduct = async (req, res, next) => {
     if (parsedVariants) {
       // Fetch existing variants
       const oldVariants = await Variant.findAll({ where: { productId: product.id } });
-      const oldVariantImages = oldVariants.map(v => v.image).filter(Boolean);
+      const oldVariantImages = oldVariants.flatMap(v => Array.isArray(v.image) ? v.image : (v.image ? [v.image] : []));
       
       // Map old variants by name for easy lookup
       const oldVariantMap = new Map();
@@ -506,9 +515,20 @@ const updateProduct = async (req, res, next) => {
 
       for (let i = 0; i < parsedVariants.length; i++) {
         const v = parsedVariants[i];
-        const vImgFile = req.files ? req.files.find(f => f.fieldname === `variantImage_${i}`) : null;
-        const vImage   = vImgFile ? `uploads/products/${vImgFile.filename}` : (v.image || null);
-        if (vImage) createdVariantImages.push(vImage);
+        const vImgFiles = req.files ? req.files.filter(f => f.fieldname === `variantImages_${i}`) : [];
+        const newUploadedPaths = vImgFiles.map(f => `uploads/products/${f.filename}`);
+        
+        let vImages = [];
+        if (Array.isArray(v.existingImages)) {
+          vImages = v.existingImages;
+        } else if (v.image) {
+          vImages = Array.isArray(v.image) ? v.image : [v.image];
+        }
+
+        const finalImages = [...vImages, ...newUploadedPaths];
+        if (finalImages.length > 0) {
+          finalImages.forEach(img => createdVariantImages.push(img));
+        }
 
         const vNameKey = v.variantName ? v.variantName.trim().toLowerCase() : '';
         const existingVariant = oldVariantMap.get(vNameKey);
@@ -523,7 +543,7 @@ const updateProduct = async (req, res, next) => {
             sku:         v.sku || existingVariant.sku || generateSku("KMV"),
             status:      v.status || "Active",
             attributes:  v.attributes || [],
-            image:       vImage,
+            image:       finalImages,
           });
           activeVariantIds.add(existingVariant.id);
         } else {
@@ -538,7 +558,7 @@ const updateProduct = async (req, res, next) => {
             sku:         v.sku || generateSku("KMV"),
             attributes:  v.attributes || [],
             status:      v.status || "Active",
-            image:       vImage,
+            image:       finalImages,
           });
           activeVariantIds.add(newVar.id);
         }
@@ -635,10 +655,13 @@ const deleteProduct = async (req, res, next) => {
       }
       const variants = await Variant.findAll({ where: { productId: product.id } });
       for (const v of variants) {
-        if (v.image && String(v.image).startsWith('uploads/')) {
-          const abs = path.join(__dirname, '..', v.image);
-          if (fs.existsSync(abs)) {
-            deleteFileIfExists(abs);
+        const vImgs = Array.isArray(v.image) ? v.image : (v.image ? [v.image] : []);
+        for (const img of vImgs) {
+          if (img && String(img).startsWith('uploads/')) {
+            const abs = path.join(__dirname, '..', img);
+            if (fs.existsSync(abs)) {
+              deleteFileIfExists(abs);
+            }
           }
         }
       }

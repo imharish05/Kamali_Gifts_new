@@ -119,7 +119,7 @@ const formHeader = { background: KM.blue, padding: '16px 24px', display: 'flex',
 const headerIcon = { width: 32, height: 32, background: 'rgba(255,255,255,0.15)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 15, fontWeight: 600 };
 const fieldStyle = { display: 'flex', flexDirection: 'column', gap: 5 };
 const labelStyle = { fontSize: 11, fontWeight: 500, color: KM.muted, textTransform: 'uppercase', letterSpacing: '0.05em' };
-const inputStyle = { padding: '9px 12px', border: `1px solid ${KM.border}`, borderRadius: 8, fontSize: 13, color: KM.text, background: '#fff', fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box', textTransform: 'capitalize' };
+const inputStyle = { padding: '9px 12px', border: `1px solid ${KM.border}`, borderRadius: 8, fontSize: 13, color: KM.text, background: '#fff', fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' };
 const submitBtn = { gridColumn: 'span 2', padding: 11, background: KM.orange, color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 };
 const tag = (color, bg) => ({ fontSize: 10, fontWeight: 700, color, background: bg, padding: '2px 7px', borderRadius: 4, whiteSpace: 'nowrap' });
 const errorStyle = { fontSize: 11, color: '#dc2626', fontWeight: 600, marginTop: 2 };
@@ -129,7 +129,7 @@ function totalStock(p) { return p.Variants?.reduce((a, v) => a + Number(v.stock 
 
 // ── Blank variant (matches VariantBuilder's internal shape) ───────────────────
 function blankVariantRow() {
-  return { id: Date.now() + Math.random(), mrp: '', salesPrice: '', stock: '', attributes: [{ key: '', value: '', customValue: '' }], imageFile: null, imagePreview: null };
+  return { id: Date.now() + Math.random(), mrp: '', salesPrice: '', stock: '', attributes: [{ key: '', value: '', customValue: '' }], imageFiles: [], imagePreviews: [] };
 }
 
 // ── Form defaults ─────────────────────────────────────────────────────────────
@@ -526,8 +526,15 @@ export default function Products({ showToast }) {
             salesPrice: v.salesPrice || '',
             stock: v.stock ?? '',
             status: v.status || 'Active',
-            imageFile: null,
-            imagePreview: v.image ? getImageUrl(v.image) : null,
+            imageFiles: [],
+            imagePreviews: (() => {
+              const imgs = Array.isArray(v.image) 
+                ? v.image 
+                : typeof v.image === 'string' && v.image.trim().startsWith('[') 
+                  ? (() => { try { return JSON.parse(v.image); } catch { return [v.image]; } })()
+                  : v.image ? [v.image] : [];
+              return imgs.map(img => getImageUrl(img)).filter(Boolean);
+            })(),
             combo: builtAttrs.map(a => ({ key: a.key, value: a.value })),
             variantName: v.variantName || builtAttrs.map(a => `${a.key}: ${a.value}`).join(' · '),
             attributes: builtAttrs.length > 0 ? builtAttrs : [{ key: '', value: '', customValue: '' }],
@@ -604,7 +611,7 @@ export default function Products({ showToast }) {
       if (v.stock === '') messages.push('Enter stock');
       else if (Number.isNaN(stock) || stock < 0) messages.push('Stock cannot be negative');
 
-      if (!v.imagePreview && !v.imageFile) messages.push('Upload a variant image');
+      if (!v.imagePreviews?.length && !v.imageFiles?.length) messages.push('Upload a variant image');
 
       variantErrors[index] = messages;
     });
@@ -690,9 +697,9 @@ export default function Products({ showToast }) {
         printText: findAttr('Print Text'),
         customLabel: findAttr('Custom Note'),
         subCategory: findAttr('Sub-type'),
-        image: (!v.imageFile && v.imagePreview && !v.imagePreview.startsWith('blob:'))
-          ? toRelativePath(v.imagePreview) : undefined,
-        variantImageIndex: v.imageFile ? idx : undefined,
+        existingImages: (v.imagePreviews || [])
+          .filter(p => p && !p.startsWith('blob:'))
+          .map(p => toRelativePath(p)),
         status: v.status || 'Active',
       };
     });
@@ -700,7 +707,11 @@ export default function Products({ showToast }) {
     fd.append('variants', JSON.stringify(mappedVariants));
 
     variants.forEach((v, idx) => {
-      if (v.imageFile) fd.append(`variantImage_${idx}`, v.imageFile);
+      if (v.imageFiles && v.imageFiles.length > 0) {
+        v.imageFiles.forEach(file => {
+          fd.append(`variantImages_${idx}`, file);
+        });
+      }
     });
 
     imageFiles.forEach(file => fd.append('images', file));
@@ -1148,7 +1159,19 @@ export default function Products({ showToast }) {
             const firstVar = row.Variants?.[0];
             const stock = totalStock(row);
             const productImgs = row.images || (row.image ? (Array.isArray(row.image) ? row.image : [row.image]) : []);
-            const variantImgs = (row.Variants || []).map(v => v.image).filter(Boolean);
+            const variantImgs = (row.Variants || []).flatMap(v => {
+              if (!v.image) return [];
+              if (Array.isArray(v.image)) return v.image;
+              if (typeof v.image === 'string' && v.image.trim().startsWith('[')) {
+                try {
+                  const parsed = JSON.parse(v.image);
+                  return Array.isArray(parsed) ? parsed : [v.image];
+                } catch {
+                  return [v.image];
+                }
+              }
+              return [v.image];
+            }).filter(Boolean);
             const imgs = productImgs.length ? productImgs : variantImgs;
             return (
               <tr key={row.id}>

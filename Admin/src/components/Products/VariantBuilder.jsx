@@ -576,17 +576,35 @@ function SkuRow({ sku, index, onChange, onDelete, errors = [] }) {
   const [imgError, setImgError] = useState('');
 
   const handleImg = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setImgError('');
-    validateVariantImage(file).then((result) => {
-      if (!result.valid) {
-        setImgError(result.error);
+    Promise.all(files.map(file => validateVariantImage(file)))
+      .then(results => {
+        const invalid = results.find(r => !r.valid);
+        if (invalid) {
+          setImgError(invalid.error);
+          e.target.value = null;
+          return;
+        }
+        const newFiles = [...(sku.imageFiles || []), ...files];
+        const newPreviews = [...(sku.imagePreviews || []), ...files.map(f => URL.createObjectURL(f))];
+        onChange({ ...sku, imageFiles: newFiles, imagePreviews: newPreviews });
         e.target.value = null;
-        return;
-      }
-      onChange({ ...sku, imageFile: file, imagePreview: URL.createObjectURL(file) });
-    });
+      });
+  };
+
+  const removeImg = (imgIdx) => {
+    const preview = (sku.imagePreviews || [])[imgIdx];
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
+    const blobsBefore = (sku.imagePreviews || [])
+      .slice(0, imgIdx)
+      .filter(p => p.startsWith('blob:')).length;
+    const newPreviews = (sku.imagePreviews || []).filter((_, idx) => idx !== imgIdx);
+    const newFiles = (sku.imageFiles || []).filter((_, idx) => idx !== blobsBefore);
+    onChange({ ...sku, imageFiles: newFiles, imagePreviews: newPreviews });
   };
 
   const hasErr = errors.length > 0;
@@ -607,27 +625,32 @@ function SkuRow({ sku, index, onChange, onDelete, errors = [] }) {
         {index + 1}
       </div>
 
-      {/* Image upload — big zone */}
-      <div style={{ flexShrink: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: KM.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Recommanded Image • 800×960px (5:6)</div>
-        <input ref={imgRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/bmp,image/tiff,image/x-icon,image/heic,image/heif,image/avif" style={{ display: 'none' }} onChange={handleImg} />
-        {sku.imagePreview ? (
-          <div style={{ position: 'relative', width: 90, height: 90 }}>
-            <img src={sku.imagePreview} alt="variant"
-              style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 10, border: `2px solid ${KM.teal}`, display: 'block' }} />
-            <button type="button" onClick={() => { onChange({ ...sku, imageFile: null, imagePreview: null }); setImgError(''); }}
-              style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: KM.red, color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontWeight: 700 }}>✕</button>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,180,216,0.85)', borderRadius: '0 0 8px 8px', fontSize: 10, color: '#fff', textAlign: 'center', padding: '3px 0', fontWeight: 600 }}>
-              {sku.imagePreview.startsWith('blob:') ? 'New' : 'Saved'}
+      {/* Image upload — strip zone */}
+      <div style={{ flexShrink: 0, maxWidth: 300 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: KM.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Images (max 10)</div>
+        <input ref={imgRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/bmp,image/tiff,image/x-icon,image/heic,image/heif,image/avif" style={{ display: 'none' }} onChange={handleImg} />
+        
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          {(sku.imagePreviews || []).map((preview, imgIdx) => (
+            <div key={imgIdx} style={{ position: 'relative', width: 75, height: 75 }}>
+              <img src={preview} alt={`variant-${imgIdx}`}
+                style={{ width: 75, height: 75, objectFit: 'cover', borderRadius: 8, border: `1.5px solid ${KM.teal}`, display: 'block' }} />
+              <button type="button" onClick={() => removeImg(imgIdx)}
+                style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: '50%', background: KM.red, color: '#fff', border: '1.5px solid #fff', cursor: 'pointer', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontWeight: 700 }}>✕</button>
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: preview.startsWith('blob:') ? 'rgba(0,180,216,0.85)' : 'rgba(107,114,128,0.85)', borderRadius: '0 0 6px 6px', fontSize: 8, color: '#fff', textAlign: 'center', padding: '1px 0', fontWeight: 600 }}>
+                {preview.startsWith('blob:') ? 'New' : 'Saved'}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div onClick={() => imgRef.current?.click()}
-            style={{ width: 90, height: 90, border: `2px dashed ${imgError ? KM.red : KM.teal}`, borderRadius: 10, background: imgError ? KM.redLight : '#F0FAFE', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <span style={{ fontSize: 26 }}>🖼️</span>
-            <span style={{ fontSize: 10, color: imgError ? KM.red : KM.teal, fontWeight: 700 }}>Upload</span>
-          </div>
-        )}
+          ))}
+
+          {(!sku.imagePreviews || sku.imagePreviews.length < 10) && (
+            <div onClick={() => imgRef.current?.click()}
+              style={{ width: 75, height: 75, border: `2px dashed ${imgError ? KM.red : KM.teal}`, borderRadius: 8, background: imgError ? KM.redLight : '#F0FAFE', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+              <span style={{ fontSize: 18 }}>➕</span>
+              <span style={{ fontSize: 9, color: imgError ? KM.red : KM.teal, fontWeight: 700 }}>Add</span>
+            </div>
+          )}
+        </div>
         {imgError && (
           <div style={{ fontSize: 10, color: KM.red, fontWeight: 600, marginTop: 4, maxWidth: 90, lineHeight: 1.3 }}>⚠ {imgError}</div>
         )}
@@ -783,7 +806,14 @@ function buildSkus(options, existingSkus = []) {
     );
 
     return existing
-      ? { ...existing, combo, variantName, attributes: attributesFromCombo }
+      ? { 
+          ...existing, 
+          combo, 
+          variantName, 
+          attributes: attributesFromCombo,
+          imageFiles: existing.imageFiles || [],
+          imagePreviews: existing.imagePreviews || (existing.imagePreview ? [existing.imagePreview] : (existing.image ? (Array.isArray(existing.image) ? existing.image : [existing.image]) : []))
+        }
       : {
           id: `new_${Date.now()}_${Math.random()}`,
           combo,
@@ -792,8 +822,8 @@ function buildSkus(options, existingSkus = []) {
           mrp: existingSkus[0]?.mrp || '',
           salesPrice: existingSkus[0]?.salesPrice || '',
           stock: '',
-          imageFile: null,
-          imagePreview: null,
+          imageFiles: [],
+          imagePreviews: [],
           status: 'Active',
         };
   });

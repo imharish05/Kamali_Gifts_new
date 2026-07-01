@@ -75,10 +75,24 @@ function parseProductImages(image) {
   return [];
 }
 
+function getFirstImage(imageField) {
+  if (!imageField) return null;
+  if (Array.isArray(imageField)) return imageField[0];
+  if (typeof imageField === 'string' && imageField.trim().startsWith('[')) {
+    try {
+      const parsed = JSON.parse(imageField);
+      return Array.isArray(parsed) ? parsed[0] : imageField;
+    } catch {
+      return imageField;
+    }
+  }
+  return imageField;
+}
+
 function getProductImg(p) {
   // Prefer first variant image (if variants exist and variant has image)
   if (Array.isArray(p?.Variants) && p.Variants.length > 0) {
-    const firstVariantImg = p.Variants[0]?.image;
+    const firstVariantImg = getFirstImage(p.Variants[0]?.image);
     if (firstVariantImg) return getImgUrl(firstVariantImg);
   }
   // Fall back to product image array[0]
@@ -252,7 +266,7 @@ function FixedProductCard({ cp }) {
     || (cp.variantId && Array.isArray(prod?.Variants)
       ? prod.Variants.find(v => String(v.id) === String(cp.variantId)) || null
       : null);
-  const img = (variant && variant.image) ? getImgUrl(variant.image) : getProductImg(prod);
+  const img = (variant && variant.image) ? getImgUrl(getFirstImage(variant.image)) : getProductImg(prod);
   const low = isLowStock(cp);
   const oos = isOutOfStock(cp);
   const qty = cp.quantity || 1;
@@ -461,7 +475,7 @@ function MixMatchCard({ cp, selected, onToggle }) {
       ? prod.Variants.find(v => String(v.id) === String(cp.variantId))
       : null);
       
-  const img = (variant && variant.image) ? getImgUrl(variant.image) : getProductImg(prod);
+  const img = (variant && variant.image) ? getImgUrl(getFirstImage(variant.image)) : getProductImg(prod);
   
   const variantId = cp.variantId || null;
   const oos = isOutOfStock(cp);

@@ -9,10 +9,19 @@ import { hasPermission } from '../../utils/authHelper';
 import AccessDenied from '../AccessDenied';
 
 const IMG_URL = process.env.REACT_APP_IMG_URL || '';
-const getImgSrc = (p) => {
-  if (!p) return null;
-  if (p.startsWith('http')) return p;
-  return `${IMG_URL}/uploads/${p.replace(/^\//, '').replace(/^uploads\//, '')}`;
+const getImgSrc = (imagePath) => {
+  if (!imagePath) return null;
+  if (typeof imagePath === 'string' && imagePath.trim().startsWith('[')) {
+    try {
+      const parsed = JSON.parse(imagePath);
+      imagePath = Array.isArray(parsed) ? parsed[0] : imagePath;
+    } catch { /* fall through */ }
+  }
+  if (Array.isArray(imagePath)) imagePath = imagePath[0];
+  if (!imagePath) return null;
+  if (imagePath.startsWith('http')) return imagePath;
+  const filename = imagePath.replace(/^\//, '').replace(/^uploads\//, '');
+  return `${IMG_URL}/uploads/${filename}`;
 };
 
 const KM = {
@@ -108,8 +117,15 @@ function variantToSku(v) {
     salesPrice:   String(v.salesPrice  || ''),
     stock:        String(v.stock       ?? ''),
     status:       v.status             || 'Active',
-    imageFile:    null,
-    imagePreview: v.image ? getImgSrc(v.image) : null,
+    imageFiles:    [],
+    imagePreviews: (() => {
+      const imgs = Array.isArray(v.image) 
+        ? v.image 
+        : typeof v.image === 'string' && v.image.trim().startsWith('[') 
+          ? (() => { try { return JSON.parse(v.image); } catch { return [v.image]; } })()
+          : v.image ? [v.image] : [];
+      return imgs.map(img => getImgSrc(img)).filter(Boolean);
+    })(),
     attributes:   finalAttrs,
     shippingWeight: v.shippingWeight ? String(v.shippingWeight) : '',
     shippingLength: dims.length ? String(dims.length) : '',
@@ -123,7 +139,7 @@ const formHeader = { background: KM.blue, padding: '16px 24px', display: 'flex',
 const headerIcon = { width: 32, height: 32, background: 'rgba(255,255,255,0.15)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 15, fontWeight: 600 };
 const fieldStyle = { display: 'flex', flexDirection: 'column', gap: 5 };
 const labelStyle = { fontSize: 11, fontWeight: 600, color: KM.muted, textTransform: 'uppercase', letterSpacing: '0.05em' };
-const inputStyle = { padding: '9px 12px', border: `1px solid ${KM.border}`, borderRadius: 8, fontSize: 13, color: KM.text, background: '#fff', fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box', textTransform: 'capitalize' };
+const inputStyle = { padding: '9px 12px', border: `1px solid ${KM.border}`, borderRadius: 8, fontSize: 13, color: KM.text, background: '#fff', fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' };
 const errorStyle = { fontSize: 11, color: '#dc2626', fontWeight: 600, marginTop: 2 };
 const submitBtn  = { padding: '12px 0', background: KM.orange, color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginTop: 8 };
 
@@ -193,22 +209,43 @@ export default function Variants({ showToast }) {
   }
 
   const handleEditImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setErrors(prev => ({ ...prev, image: null }));
-    validateProductImageDimensions(file).then((result) => {
-      if (!result.valid) {
-        setErrors(prev => ({ ...prev, image: result.error }));
+    Promise.all(files.map(file => validateProductImageDimensions(file)))
+      .then(results => {
+        const invalid = results.find(r => !r.valid);
+        if (invalid) {
+          setErrors(prev => ({ ...prev, image: invalid.error }));
+          e.target.value = null;
+          return;
+        }
+        setEditSku(prev => ({
+          ...prev,
+          imageFiles: [...(prev.imageFiles || []), ...files],
+          imagePreviews: [...(prev.imagePreviews || []), ...files.map(f => URL.createObjectURL(f))]
+        }));
         e.target.value = null;
-        return;
-      }
-      setEditSku(prev => ({
-        ...prev,
-        imageFile: file,
-        imagePreview: URL.createObjectURL(file)
-      }));
-    });
+      });
   };
+
+  const removeEditImage = (imgIdx) => {
+    const preview = (editSku.imagePreviews || [])[imgIdx];
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
+    const blobsBefore = (editSku.imagePreviews || [])
+      .slice(0, imgIdx)
+      .filter(p => p.startsWith('blob:')).length;
+    const newPreviews = (editSku.imagePreviews || []).filter((_, idx) => idx !== imgIdx);
+    const newFiles = (editSku.imageFiles || []).filter((_, idx) => idx !== blobsBefore);
+    setEditSku(prev => ({
+      ...prev,
+      imageFiles: newFiles,
+      imagePreviews: newPreviews
+    }));
+  };
+
 
   // ── Open ADD form ─────────────────────────────────────────────────────────
   const openAdd = () => {
@@ -263,7 +300,7 @@ export default function Variants({ showToast }) {
       else if (!Number.isNaN(mrp) && mrp > 0 && salesPrice > mrp) messages.push('Sales price cannot be greater than MRP');
       if (v.stock === '' || v.stock === undefined || v.stock === null) messages.push('Enter stock');
       else if (Number.isNaN(stock) || stock < 0) messages.push('Stock cannot be negative');
-      if (!v.imagePreview && !v.imageFile) messages.push('Upload a variant image');
+      if (!v.imagePreviews?.length && !v.imageFiles?.length) messages.push('Upload a variant image');
 
       return messages;
     });
@@ -305,7 +342,7 @@ export default function Variants({ showToast }) {
     if (editSku.stock === '' || editSku.stock === undefined || editSku.stock === null) next.stock = 'Enter stock';
     else if (Number.isNaN(stock) || stock < 0) next.stock = 'Stock cannot be negative';
 
-    if (!editSku.imagePreview && !editSku.imageFile) next.image = 'Upload a variant image';
+    if (!editSku.imagePreviews?.length && !editSku.imageFiles?.length) next.image = 'Upload a variant image';
 
     setErrors(next);
     return !Object.keys(next).length;
@@ -315,11 +352,13 @@ export default function Variants({ showToast }) {
   const validateImageDimensions = async (skuList) => {
     for (let i = 0; i < skuList.length; i++) {
       const s = skuList[i];
-      if (s.imageFile) {
-        const result = await validateProductImageDimensions(s.imageFile);
-        if (!result.valid) {
-          setErrors(prev => ({ ...prev, [`sku_${i}`]: `Image: ${result.error}` }));
-          return false;
+      if (s.imageFiles && s.imageFiles.length > 0) {
+        for (const file of s.imageFiles) {
+          const result = await validateProductImageDimensions(file);
+          if (!result.valid) {
+            setErrors(prev => ({ ...prev, [`sku_${i}`]: `Image: ${result.error}` }));
+            return false;
+          }
         }
       }
     }
@@ -327,8 +366,6 @@ export default function Variants({ showToast }) {
   };
 
   // ── Submit ADD ────────────────────────────────────────────────────────────
-  // Simple create-only — no differential sync since add mode is always blank.
-  // All skus in the builder are new (new_ prefix), just POST each one.
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!validateAdd()) return;
@@ -352,7 +389,7 @@ export default function Variants({ showToast }) {
           stock:       s.stock,
           status:      s.status || 'Active',
           attributes:  attrs,
-          imageFile:   s.imageFile || undefined,
+          imageFiles:  s.imageFiles || [],
         }));
       }
       showToast.success(`${skus.length} variant${skus.length > 1 ? 's' : ''} added!`, tid);
@@ -368,11 +405,13 @@ export default function Variants({ showToast }) {
     e.preventDefault();
     if (!validateEdit()) return;
     
-    if (editSku.imageFile) {
-      const result = await validateProductImageDimensions(editSku.imageFile);
-      if (!result.valid) {
-        showToast.error(`Image: ${result.error}`);
-        return;
+    if (editSku.imageFiles && editSku.imageFiles.length > 0) {
+      for (const file of editSku.imageFiles) {
+        const result = await validateProductImageDimensions(file);
+        if (!result.valid) {
+          showToast.error(`Image: ${result.error}`);
+          return;
+        }
       }
     }
 
@@ -387,6 +426,15 @@ export default function Variants({ showToast }) {
         height: editSku.shippingHeight ? parseFloat(editSku.shippingHeight) : 0,
       } : null;
 
+      const relativeExistingImages = (editSku.imagePreviews || [])
+        .filter(p => p && !p.startsWith('blob:'))
+        .map(p => {
+          if (p.startsWith('http')) {
+            try { return new URL(p).pathname.replace(/^\//, ''); } catch { return p; }
+          }
+          return p.replace(/^\//, '');
+        });
+
       await dispatch(editVariant({
         id: editingId,
         data: {
@@ -397,7 +445,8 @@ export default function Variants({ showToast }) {
           stock:       editSku.stock,
           status:      editSku.status || 'Active',
           attributes:  attrs,
-          imageFile:   editSku.imageFile || undefined,
+          imageFiles:  editSku.imageFiles || [],
+          existingImages: relativeExistingImages,
           shippingWeight: editSku.shippingWeight !== '' ? parseFloat(editSku.shippingWeight) : null,
           shippingDimensions: dims,
         },
@@ -590,18 +639,23 @@ export default function Variants({ showToast }) {
                 
                 {/* Variant Image Upload */}
                 <div style={fieldStyle}>
-                  <label style={labelStyle}>Variant Image *</label>
+                  <label style={labelStyle}>Variant Images (max 10) *</label>
                   <input
                     type="file"
+                    multiple
                     accept="image/*"
                     style={inputStyle}
                     onChange={handleEditImageChange}
                   />
-                  {editSku.imagePreview && (
-                    <div style={{ marginTop: 8, position: 'relative', width: 80, height: 96 }}>
-                      <img src={editSku.imagePreview} alt="Preview" style={{ width: 80, height: 96, objectFit: 'cover', borderRadius: 6, border: '1px solid #ccc' }} />
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                    {(editSku.imagePreviews || []).map((preview, imgIdx) => (
+                      <div key={imgIdx} style={{ position: 'relative', width: 60, height: 72 }}>
+                        <img src={preview} alt="Preview" style={{ width: 60, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid #ccc' }} />
+                        <button type="button" onClick={() => removeEditImage(imgIdx)}
+                          style={{ position: 'absolute', top: -3, right: -3, width: 16, height: 16, borderRadius: '50%', background: KM.red, color: '#fff', border: '1px solid #fff', cursor: 'pointer', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontWeight: 700 }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
                   <ErrorMsg field="image" />
                 </div>
               </div>

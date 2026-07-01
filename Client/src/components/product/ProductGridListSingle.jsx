@@ -44,8 +44,22 @@ const ProductGridListSingle = ({
       ? (() => { try { const p = JSON.parse(product.image); return Array.isArray(p) ? p.filter(Boolean) : [product.image]; } catch { return [product.image]; } })()
       : [];
 
+  const getVariantImages = (v) => {
+    if (!v || !v.image) return [];
+    if (Array.isArray(v.image)) return v.image;
+    if (typeof v.image === 'string' && v.image.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(v.image);
+        return Array.isArray(parsed) ? parsed : [v.image];
+      } catch {
+        return [v.image];
+      }
+    }
+    return [v.image];
+  };
+
   // Fall back to variant images when product has no gallery images
-  const variantImages = (product.Variants || []).map(v => v.image).filter(Boolean);
+  const variantImages = (product.Variants || []).flatMap(v => getVariantImages(v)).filter(Boolean);
   const allImages = images.length ? images : variantImages;
 
   const mainImage  = allImages[0] ? getImgUrl(allImages[0]) : "/assets/img/products/products-1.jpeg";

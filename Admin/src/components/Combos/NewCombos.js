@@ -322,7 +322,7 @@ function ProductPickerRow({ allProducts, onAdd, label = "Included Products", cur
               boxShadow: "0 8px 24px rgba(0,0,0,0.12)", maxHeight: 220, overflowY: "auto", marginTop: 2,
             }}>
               {filtered.map(p => {
-                const img = resolveImage(p.image) || p.Variants?.[0]?.image;
+                const img = resolveImage(p.image) || resolveImage(p.Variants?.[0]?.image);
                 const imgSrc = img ? getImg(img) : null;
                 return (
                   <div key={p.id}
@@ -502,8 +502,9 @@ function ProductList({ products, allProducts, onRemove, isEdit, initialId, dispa
         const variant = cp.variant || prod?.Variants?.find(v => String(v.id) === String(cp.variantId));
         // Image: resolve from product — handles JSON string, array, or plain path
         const img =
-  resolveImage(prod?.image) ||
-  prod?.Variants?.[0]?.image;
+          resolveImage(variant?.image) ||
+          resolveImage(prod?.image) ||
+          resolveImage(prod?.Variants?.[0]?.image);
         const stock = variant ? Number(variant.stock) : Number(prod?.stock ?? 0);
         const price = variant ? parseFloat(variant.salesPrice) : parseFloat(prod?.price || 0);
         const variantLabel = buildVariantLabel(variant);

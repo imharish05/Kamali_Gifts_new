@@ -19,6 +19,12 @@ const buildImagePath = (file) => {
   return file.path.replace(/\\/g, "/").replace(/^.*uploads\//, "uploads/");
 };
 
+const buildImagePaths = (files) => {
+  if (!files) return [];
+  const fileArray = Array.isArray(files) ? files : [files];
+  return fileArray.map(file => file.path.replace(/\\/g, "/").replace(/^.*uploads\//, "uploads/"));
+};
+
 const deleteOldImage = (imagePath) => {
   if (!imagePath) return;
   try {
@@ -198,7 +204,7 @@ const getByProduct = async (req, res) => {
 const add = async (req, res) => {
   try {
     const { productId, mrp, salesPrice, stock, status, stockStatus, warningThreshold, shippingWeight, shippingDimensions } = req.body;
-    const image = buildImagePath(req.file);
+    const image = req.files && req.files.length > 0 ? buildImagePaths(req.files) : (req.file ? [buildImagePath(req.file)] : []);
 
     // ── Basic validation ──────────────────────────────────────────────────
     if (!productId) return res.status(400).json({ message: "productId is required" });
@@ -294,7 +300,7 @@ const update = async (req, res) => {
     const variant = await Variant.findByPk(req.params.id);
     if (!variant) return res.status(404).json({ message: "Not found" });
 
-    const { productId, variantName, mrp, salesPrice, stock, attributes, status, stockStatus, warningThreshold, shippingWeight, shippingDimensions } = req.body;
+    const { productId, variantName, mrp, salesPrice, stock, attributes, status, stockStatus, warningThreshold, shippingWeight, shippingDimensions, existingImages } = req.body;
     const oldProductId = variant.productId;
     const parsedAttributes = attributes !== undefined ? parseAttributes(attributes) : undefined;
 
@@ -318,6 +324,22 @@ const update = async (req, res) => {
       }
     }
 
+    let finalImages = undefined;
+    if (existingImages !== undefined || (req.files && req.files.length > 0) || req.file) {
+      let baseImages = [];
+      if (existingImages !== undefined) {
+        baseImages = parseAttributes(existingImages);
+      } else {
+        baseImages = Array.isArray(variant.image) ? variant.image : (variant.image ? [variant.image] : []);
+      }
+      if (req.files && req.files.length > 0) {
+        baseImages = [...baseImages, ...buildImagePaths(req.files)];
+      } else if (req.file) {
+        baseImages = [...baseImages, buildImagePath(req.file)];
+      }
+      finalImages = baseImages;
+    }
+
     const updates = {
       ...(productId   !== undefined && { productId }),
       ...(variantName !== undefined && { variantName }),
@@ -330,12 +352,8 @@ const update = async (req, res) => {
       ...(status      !== undefined && { status }),
       ...(weightVal   !== undefined && { shippingWeight: weightVal }),
       ...(parsedDimensions !== undefined && { shippingDimensions: parsedDimensions }),
+      ...(finalImages !== undefined && { image: finalImages }),
     };
-
-    if (req.file) {
-      deleteOldImage(variant.image);
-      updates.image = buildImagePath(req.file);
-    }
 
     await variant.update(updates);
 

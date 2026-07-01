@@ -35,10 +35,24 @@ const ProductGridSingle = ({
       ? (() => { try { const p = JSON.parse(product.image); return Array.isArray(p) ? p.filter(Boolean) : []; } catch { return []; } })()
       : [];
 
+  const getFirstImage = (imageField) => {
+    if (!imageField) return null;
+    if (Array.isArray(imageField)) return imageField[0];
+    if (typeof imageField === 'string' && imageField.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(imageField);
+        return Array.isArray(parsed) ? parsed[0] : imageField;
+      } catch {
+        return imageField;
+      }
+    }
+    return imageField;
+  };
+
   // If product has no main images, fall back to first variant's image
   const variantFallbackImg =
     productImages.length === 0 && hasVariants
-      ? (product.Variants.find(v => v.image)?.image || null)
+      ? (getFirstImage(product.Variants.find(v => v.image)?.image) || null)
       : null;
 
   const mainImage = productImages[0]

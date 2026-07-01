@@ -3,7 +3,8 @@ import { setLoading, setItems, setError, addItem, updateItem, removeItem } from 
 
 // Build FormData when imageFile is present, otherwise send JSON
 function buildPayload(data) {
-  if (data.imageFile instanceof File) {
+  const hasFiles = Array.isArray(data.imageFiles) && data.imageFiles.some(f => f instanceof File);
+  if (hasFiles) {
     const fd = new FormData();
     fd.append("productId",   data.productId);
     fd.append("variantName", data.variantName);
@@ -12,7 +13,14 @@ function buildPayload(data) {
     fd.append("stock",       data.stock);
     fd.append("status",      data.status || "Active");
     fd.append("attributes",  JSON.stringify(data.attributes || []));
-    fd.append("image",       data.imageFile);
+    if (data.existingImages !== undefined) {
+      fd.append("existingImages", typeof data.existingImages === 'string' ? data.existingImages : JSON.stringify(data.existingImages));
+    }
+    data.imageFiles.forEach(file => {
+      if (file instanceof File) {
+        fd.append("variantImages", file);
+      }
+    });
     if (data.shippingWeight !== undefined && data.shippingWeight !== null) {
       fd.append("shippingWeight", data.shippingWeight);
     }
@@ -21,11 +29,12 @@ function buildPayload(data) {
     }
     return { payload: fd, isMultipart: true };
   }
-  const { imageFile, imagePreview, ...rest } = data;
+  const { imageFiles, imagePreviews, ...rest } = data;
   return { 
     payload: { 
       ...rest, 
       attributes: JSON.stringify(data.attributes || []),
+      existingImages: data.existingImages !== undefined ? (typeof data.existingImages === 'string' ? data.existingImages : JSON.stringify(data.existingImages)) : undefined,
       shippingDimensions: data.shippingDimensions !== undefined ? (typeof data.shippingDimensions === 'string' ? data.shippingDimensions : JSON.stringify(data.shippingDimensions)) : undefined
     }, 
     isMultipart: false 

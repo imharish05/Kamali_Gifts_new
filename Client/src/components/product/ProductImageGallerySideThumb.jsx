@@ -64,6 +64,14 @@ const ProductImageGallerySideThumb = ({ product, thumbPosition }) => {
         setThumbnailStartIndex((prev) => prev + 1);
       }
 
+      // Slide window backward if clicking the first visible thumb and more exist before it
+      const isFirstVisible = visibleIndex === 0;
+      const moreBefore     = thumbnailStartIndex > 0;
+
+      if (isFirstVisible && moreBefore) {
+        setThumbnailStartIndex((prev) => prev - 1);
+      }
+
       setActiveImageIndex(absoluteIndex);
     },
     [thumbnailStartIndex, images.length]
@@ -194,6 +202,13 @@ const ProductImageGallerySideThumb = ({ product, thumbPosition }) => {
       >
         {/* Thumbnail column — hidden when only 1 image */}
         {!singleImage && <div style={styles.thumbCol}>
+          {images.length > THUMB_COUNT && (
+            <button type="button" onClick={() => setThumbnailStartIndex(prev => Math.max(0, prev - 1))}
+              disabled={thumbnailStartIndex === 0}
+              style={{ background: "#f3f4f6", border: "1px solid #E5E7EB", borderRadius: 4, color: "#4b5563", cursor: thumbnailStartIndex === 0 ? "not-allowed" : "pointer", fontSize: 10, height: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: thumbnailStartIndex === 0 ? 0.3 : 1, width: "100%", padding: 0 }}>
+              ▲
+            </button>
+          )}
           {visibleImages.map((img, visibleIdx) => {
             const absIdx   = thumbnailStartIndex + visibleIdx;
             const isActive = absIdx === activeImageIndex;
@@ -215,6 +230,13 @@ const ProductImageGallerySideThumb = ({ product, thumbPosition }) => {
               </div>
             );
           })}
+          {images.length > THUMB_COUNT && (
+            <button type="button" onClick={() => setThumbnailStartIndex(prev => Math.min(images.length - THUMB_COUNT, prev + 1))}
+              disabled={thumbnailStartIndex + THUMB_COUNT >= images.length}
+              style={{ background: "#f3f4f6", border: "1px solid #E5E7EB", borderRadius: 4, color: "#4b5563", cursor: (thumbnailStartIndex + THUMB_COUNT >= images.length) ? "not-allowed" : "pointer", fontSize: 10, height: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: (thumbnailStartIndex + THUMB_COUNT >= images.length) ? 0.3 : 1, width: "100%", padding: 0 }}>
+              ▼
+            </button>
+          )}
         </div>}
 
         {/* Main image column */}
