@@ -197,7 +197,7 @@ const ProductGridSingle = ({
             {(product.stock && product.stock > 0) || (Array.isArray(product.Variants) && product.Variants.length > 0) ? (
               Array.isArray(product.Variants) && product.Variants.length > 0 ? (
                 <button onClick={handleAddToCart}>
-                  SELECT OPTIONS
+                  Click For More Designs
                 </button>
               ) : (() => {
                 const inCart = cartItem !== undefined && cartItem.quantity > 0;

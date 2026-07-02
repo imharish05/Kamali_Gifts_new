@@ -139,13 +139,22 @@ export const cartItemStock = (item, color, size) => {
 export const getSortedProducts = (products, sortType, sortValue) => {
   if (products && sortType && sortValue) {
     if (sortType === "search") {
-      const q = sortValue.toLowerCase();
+      const q = sortValue.trim().toLowerCase();
+      if (!q) return products;
+      const escapedQ = q.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      let searchRegex;
+      try {
+        searchRegex = new RegExp('\\b' + escapedQ + 's?\\b', 'i');
+      } catch {
+        searchRegex = new RegExp(escapedQ, 'i');
+      }
       return products.filter(
         product =>
-          product.name.toLowerCase().includes(q) ||
-          (product.shortDescription && product.shortDescription.toLowerCase().includes(q)) ||
-          (product.category && product.category.some(c => c.toLowerCase().includes(q))) ||
-          (product.tag && product.tag.some(t => t.toLowerCase().includes(q)))
+          searchRegex.test(product.name) ||
+          (product.shortDescription && searchRegex.test(product.shortDescription)) ||
+          (product.Category?.name && searchRegex.test(product.Category.name)) ||
+          (product.Category?.value && searchRegex.test(product.Category.value)) ||
+          (product.tag && product.tag.some(t => searchRegex.test(t)))
       );
     }
     if (sortType === "category") {

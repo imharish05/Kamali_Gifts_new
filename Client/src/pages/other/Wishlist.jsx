@@ -268,7 +268,7 @@ const Wishlist = () => {
                               ) : hasVariants && !item.selectedVariantId ? (
                                 // Product has variants but none selected — send to product page
                                 <Link to={`${process.env.PUBLIC_URL}/product/${item.slug || item.id}`} className="cart-action-btn">
-                                  SELECT OPTIONS
+                                  Click For More Designs
                                 </Link>
                               ) : stock > 0 ? (
                                 inCart ? (

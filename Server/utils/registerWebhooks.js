@@ -4,31 +4,18 @@ const { shiprocketPost, shiprocketGet } = require('./shiprocket');
 async function registerShiprocketWebhook() {
   const appUrl = process.env.APP_URL;
   if (!appUrl) {
-    console.log('[Webhook] APP_URL not set — skipping Shiprocket webhook registration');
+    console.log('[Webhook] APP_URL not set — skipping Shiprocket webhook guidelines');
     return;
   }
 
-  const webhookUrl = `${appUrl}/api/returns/webhook/shiprocket-return`;
-
-  try {
-    // Check if already registered — idempotent
-    const existing = await shiprocketGet('/webhooks').catch(() => ({ data: [] }));
-    const list = existing?.data || [];
-    const alreadyRegistered = list.some(w => w.url === webhookUrl);
-
-    if (alreadyRegistered) {
-      console.log('[Webhook] Shiprocket webhook already registered ✓');
-      return;
-    }
-
-    await shiprocketPost('/webhooks', {
-      url:    webhookUrl,
-      events: ['shipment_status'],
-    });
-    console.log('[Webhook] Shiprocket webhook registered:', webhookUrl);
-  } catch (err) {
-    console.error('[Webhook] Shiprocket registration error:', err.message);
-  }
+  const webhookUrl = `${appUrl}/api/returns/webhook/status-update`;
+  console.log('--------------------------------------------------');
+  console.log('[Webhook] SHIPROCKET CONFIGURATION INFO:');
+  console.log('To receive shipment tracking status updates, configure the');
+  console.log('following callback URL in your Shiprocket Dashboard:');
+  console.log(`👉 ${webhookUrl}`);
+  console.log('(Settings -> API -> Webhooks -> Toggle shipment_status)');
+  console.log('--------------------------------------------------');
 }
 
 async function registerRazorpayWebhook() {

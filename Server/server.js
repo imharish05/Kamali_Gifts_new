@@ -88,6 +88,7 @@ app.use(cors())
 // Razorpay webhook signature verification requires the raw, unparsed request body.
 app.use("/api/payment/webhook", express.raw({ type: "*/*" }));
 app.use("/api/returns/webhook/shiprocket-return", express.raw({ type: "*/*" }));
+app.use("/api/returns/webhook/status-update", express.raw({ type: "*/*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -162,7 +163,8 @@ const startServer = async () => {
       await sequelize.query("ALTER TABLE products ADD COLUMN customisation_fields JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE cart_items ADD COLUMN customisation_details JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE order_items ADD COLUMN customisation_details JSON NULL;").catch(() => {});
-      console.log("✅ Users and products table columns verified");
+      await sequelize.query("ALTER TABLE Variants MODIFY COLUMN image TEXT;").catch(() => {});
+      console.log("✅ Users, products and variants table columns verified");
     } catch (alterErr) {
       console.warn("⚠️ Column alter query failed (ignoring):", alterErr.message);
     }

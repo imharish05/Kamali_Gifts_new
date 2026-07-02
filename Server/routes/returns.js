@@ -21,6 +21,7 @@ const { uploadReturn, handleReturnUploadError } = require("../middleware/uploadR
 // ── Public route (Shiprocket Webhook) ─────────────────────────────────────────
 // MUST NOT have protect or adminOnly middleware!
 router.post("/webhook/shiprocket-return", handleShiprocketReturnWebhook);
+router.post("/webhook/status-update", handleShiprocketReturnWebhook);
 
 // ── Customer routes (protected) ───────────────────────────────────────────────
 router.post("/", protect, uploadReturn, handleReturnUploadError, createReturnRequest);
