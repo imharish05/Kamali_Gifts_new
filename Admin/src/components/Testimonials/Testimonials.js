@@ -26,7 +26,7 @@ const countWords = (text) => text.trim().split(/\s+/).filter(Boolean).length;
 const LIMITS = {
   name:        { chars: 60,  words: 6  },
   designation: { chars: 80,  words: 8  },
-  text:        { chars: 350, words: 60 },
+  text:        { chars: 1000, words: 150 },
 };
 
 const TESTIMONIAL_IMAGE_CONFIG = {

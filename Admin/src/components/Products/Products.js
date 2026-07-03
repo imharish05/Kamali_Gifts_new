@@ -136,8 +136,8 @@ function blankVariantRow() {
 const BLANK_FORM = {
   productName: '', categoryId: '', categoryName: '', subCategoryId: '', subCategoryName: '',
   brandId: '', discount: '', shortDescription: '', fullDescription: '',
-  tag: '', isCustomisable: true, isNewArrival: false, isHotDeal: false,
-  isPartialCodAvailable: true,
+  tag: '', isCustomisable: false, isNewArrival: false, isHotDeal: false,
+  isPartialCodAvailable: false,
   customisationFields: {},
   shippingWeight: '', shippingLength: '', shippingBreadth: '', shippingHeight: '',
 };
