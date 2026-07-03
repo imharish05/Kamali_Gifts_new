@@ -87,12 +87,6 @@ const ProductGridSingle = ({
     : (discountedPrice !== null ? +(discountedPrice * currencyRate).toFixed(2) : null);
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      cogoToast.warn("Please login to add items to cart", { position: "top-center" });
-      const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-      navigate(`${process.env.PUBLIC_URL}/login?redirect=${redirect}`);
-      return;
-    }
     if (Array.isArray(product.Variants) && product.Variants.length > 0) {
       navigate(process.env.PUBLIC_URL + "/product/" + (product.slug || product.id));
       return;
@@ -184,12 +178,12 @@ const ProductGridSingle = ({
             >
               <i className="pe-7s-like" />
             </button>
-            <button
+            {/* <button
               onClick={() => setModalShow(true)}
               title="Quick View"
             >
               <i className="pe-7s-look" />
-            </button>
+            </button> */}
           </div>
 
           {/* Add to Cart Overlay */}
@@ -248,7 +242,7 @@ const ProductGridSingle = ({
         </div>
       </div>
 
-      {/* Quick View Modal */}
+      {/* Quick View Modal — commented out
       {modalShow && (
         <ProductModal
           show={modalShow}
@@ -262,6 +256,7 @@ const ProductGridSingle = ({
           wishlistItem={wishlistItem}
         />
       )}
+      */}
     </Fragment>
   );
 };

@@ -198,7 +198,7 @@ useEffect(() => {
 
             {/* Protected */}
             <Route path={process.env.PUBLIC_URL + "/my-account"} element={<ProtectedRoute><MyAccount /></ProtectedRoute>} />
-            <Route path={process.env.PUBLIC_URL + "/cart"} element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path={process.env.PUBLIC_URL + "/cart"} element={<Cart />} />
             <Route path={process.env.PUBLIC_URL + "/wishlist"} element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path={process.env.PUBLIC_URL + "/checkout"} element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path={process.env.PUBLIC_URL + "/order-confirmation"} element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />

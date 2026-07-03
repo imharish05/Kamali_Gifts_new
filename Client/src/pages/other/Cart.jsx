@@ -68,6 +68,7 @@ const Cart = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const authUser = useSelector((state) => state.auth?.user);
+  const isAuthenticated = useSelector((state) => !!state.auth?.isAuthenticated);
   const currency = useSelector(
     (state) => state.currency || { currencyName: "INR", currencyRate: 1, currencySymbol: "₹" }
   );
@@ -89,6 +90,8 @@ const Cart = () => {
   const revalDoneRef = useRef(false);
 
   const revalidateCartItems = useCallback(async () => {
+    // Guests have no server cart — skip revalidation to avoid 401
+    if (!isAuthenticated) return;
     if (!cartItems || cartItems.length === 0 || revalDoneRef.current) return;
     setRevalidating(true);
     try {
@@ -892,6 +895,11 @@ const Cart = () => {
                   <button
                     className="kg-checkout-btn"
                     onClick={() => {
+                      if (!isAuthenticated) {
+                        cogoToast.warn("Please login to proceed to checkout", { position: "top-center" });
+                        navigate(process.env.PUBLIC_URL + "/login?redirect=" + encodeURIComponent("/checkout"));
+                        return;
+                      }
                       dispatch(createCheckoutFromCart(cartItems));
                       navigate(process.env.PUBLIC_URL + "/checkout", {
                         state: {

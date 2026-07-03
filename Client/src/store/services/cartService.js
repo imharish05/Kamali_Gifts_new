@@ -1,23 +1,15 @@
+import { v4 as uuidv4 } from 'uuid';
 import cogoToast from "cogo-toast";
 import api from "../../api/axios";
 import { addToCart, addToCartSilent, increaseQuantity, deleteFromCart, decreaseQuantity, deleteAllFromCart } from "../slices/cart-slice";
 import { store } from "../store";
 
-/**
- * Check auth before any cart mutation.
- */
-const requireAuth = (redirectPath = "/cart") => {
-  const state = store.getState();
-  const isAuthenticated = state.auth?.isAuthenticated;
+/** Returns true when user is authenticated */
+const isAuthed = () => !!store.getState().auth?.isAuthenticated;
 
-  if (!isAuthenticated) {
-    cogoToast.warn("Please login to continue", { position: "top-center" });
-    const redirect = encodeURIComponent(redirectPath);
-    window.location.href = `${process.env.PUBLIC_URL}/login?redirect=${redirect}`;
-    return false;
-  }
-  return true;
-};
+// ─────────────────────────────────────────────────────────────────────────────
+//  ADD TO CART
+// ─────────────────────────────────────────────────────────────────────────────
 
 const addToCartBaseService = async (dispatchOrProduct, optionalProduct, silent = false) => {
   let dispatch = store.dispatch;
@@ -28,8 +20,22 @@ const addToCartBaseService = async (dispatchOrProduct, optionalProduct, silent =
     product = optionalProduct;
   }
 
-  if (!requireAuth(window.location.pathname)) return false;
+  // ── Guest path: add directly to Redux (localStorage via redux-persist) ──
+  if (!isAuthed()) {
+    const localItem = {
+      ...product,
+      cartItemId: product.cartItemId || uuidv4(),
+      quantity: product.quantity || 1,
+    };
+    if (silent) {
+      dispatch(addToCartSilent(localItem));
+    } else {
+      dispatch(addToCart(localItem));
+    }
+    return true;
+  }
 
+  // ── Authenticated path: call API then update Redux ───────────────────────
   try {
     const payload = {
       productId: product.productId || product.id,
@@ -59,7 +65,7 @@ const addToCartBaseService = async (dispatchOrProduct, optionalProduct, silent =
       selectedProductSize: cartItem.selectedProductSize,
       selectedVariantId: cartItem.selectedVariantId != null ? Number(cartItem.selectedVariantId) : null,
       selectedVariantName: cartItem.productSnapshot?.selectedVariantName || product.selectedVariantName || null,
-      selectedVariant: matchedVariant || null,   // ← full variant object (same as wishlist)
+      selectedVariant: matchedVariant || null,
       name: cartItem.productSnapshot?.name || cartItem.product?.name || product.name,
       price: typeof resolvedPrice === "string" ? parseFloat(resolvedPrice) : resolvedPrice,
       discount: typeof resolvedDiscount === "string" ? parseFloat(resolvedDiscount) : resolvedDiscount,
@@ -95,9 +101,18 @@ export const addToCartSilentService = (dispatchOrProduct, optionalProduct) => {
   return addToCartBaseService(dispatchOrProduct, optionalProduct, true);
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  DELETE FROM CART
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const deleteFromCartService = async (cartItemId) => {
   const dispatch = store.dispatch;
-  if (!requireAuth()) return;
+
+  // Guest: just remove from Redux
+  if (!isAuthed()) {
+    dispatch(deleteFromCart(cartItemId));
+    return;
+  }
 
   try {
     await api.delete(`/cart/remove/${cartItemId}`);
@@ -108,9 +123,18 @@ export const deleteFromCartService = async (cartItemId) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  INCREASE QUANTITY
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const increaseQuantityService = async (product) => {
   const dispatch = store.dispatch;
-  if (!requireAuth()) return;
+
+  // Guest: just update Redux
+  if (!isAuthed()) {
+    dispatch(increaseQuantity({ cartItemId: product.cartItemId }));
+    return;
+  }
 
   try {
     await api.patch(`/cart/increase/${product.cartItemId}`);
@@ -121,6 +145,10 @@ export const increaseQuantityService = async (product) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  DECREASE QUANTITY
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const decreaseQuantityService = async (dispatchOrProduct, optionalProduct) => {
   let dispatch = store.dispatch;
   let product = dispatchOrProduct;
@@ -130,7 +158,11 @@ export const decreaseQuantityService = async (dispatchOrProduct, optionalProduct
     product = optionalProduct;
   }
 
-  if (!requireAuth()) return;
+  // Guest: just update Redux
+  if (!isAuthed()) {
+    dispatch(decreaseQuantity(product));
+    return;
+  }
 
   try {
     await api.patch(`/cart/decrease/${product.cartItemId}`);
@@ -141,9 +173,18 @@ export const decreaseQuantityService = async (dispatchOrProduct, optionalProduct
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  CLEAR CART
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const deleteAllFromCartService = async (dispatch) => {
   let activeDispatch = typeof dispatch === "function" ? dispatch : store.dispatch;
-  if (!requireAuth()) return;
+
+  // Guest: just clear Redux
+  if (!isAuthed()) {
+    activeDispatch(deleteAllFromCart());
+    return;
+  }
 
   try {
     await api.delete("/cart/clear");

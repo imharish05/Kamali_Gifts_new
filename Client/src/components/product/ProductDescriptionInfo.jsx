@@ -758,11 +758,6 @@ const ProductDescriptionInfo = ({
 
   const handleAddToCart = async () => {
     if (isAddingToCart || isBuyingNow) return; // double-click protection
-    if (!isAuthenticated) {
-      cogoToast.warn("Please login to add items to cart", { position: "top-center" });
-      redirectToLogin();
-      return;
-    }
     if (!validateCart()) return;
     
     setIsAddingToCart(true);
@@ -1395,7 +1390,7 @@ const handleBuyNow = async () => {
           <div className="row g-2 pdp-product-actions-ctas">
             {stockState.isPurchasable ? (
               <>
-                {isAuthenticated && productCartQty > 0 ? (
+                {productCartQty > 0 ? (
                   <>
                   <div className="col-12 pdp-info__purchase-cell pdp-info__purchase-cell--primary">
                     <Link to="/cart" style={{ width: "100%", height: "46px", background: "#111827", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textDecoration: "none", borderRadius: "8px", transition: "all 0.2s ease", border: "none" }} onMouseEnter={(e) => e.currentTarget.style.background = "#1f2937"} onMouseLeave={(e) => e.currentTarget.style.background = "#111827"}>
@@ -1433,7 +1428,7 @@ const handleBuyNow = async () => {
                     <div className="col-12 col-sm-6 pdp-info__purchase-cell pdp-info__purchase-cell--primary">
                       <button
                         onClick={handleAddToCart}
-                        disabled={isAddingToCart || isBuyingNow || (isAuthenticated && productCartQty >= (stockState.maxQty !== undefined ? stockState.maxQty : effectiveStock))}
+                        disabled={isAddingToCart || isBuyingNow || productCartQty >= (stockState.maxQty !== undefined ? stockState.maxQty : effectiveStock)}
                         style={{ width: "100%", height: "46px", background: "#de1a67", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textDecoration: "none", borderRadius: "8px", transition: "all 0.2s ease", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(222,26,103,0.2)" }}
                         title="Add this product to your cart"
                       >
@@ -1456,7 +1451,7 @@ const handleBuyNow = async () => {
                     <div className="col-12 col-sm-6 pdp-info__purchase-cell pdp-info__purchase-cell--secondary">
                       <button
                         onClick={handleBuyNow}
-                        disabled={isAddingToCart || isBuyingNow || (isAuthenticated && productCartQty >= (stockState.maxQty !== undefined ? stockState.maxQty : effectiveStock))}
+                        disabled={isAddingToCart || isBuyingNow || productCartQty >= (stockState.maxQty !== undefined ? stockState.maxQty : effectiveStock)}
                         style={{ width: "100%", height: "46px", background: "#f16e35", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", textDecoration: "none", borderRadius: "8px", transition: "all 0.2s ease", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(241,110,53,0.2)" }}
                         title="Buy this product now"
                       >

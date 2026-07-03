@@ -134,13 +134,13 @@ const ProductGridListSingle = ({
                   >
                     <i className="pe-7s-like " />
                   </button>
-                  <button
+                  {/* <button
                     className="list-icon-btn"
                     onClick={() => setModalShow(true)}
                     title="Quick View"
                   >
                     <i className="pe-7s-look" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
@@ -169,12 +169,12 @@ const ProductGridListSingle = ({
               >
                 <i className="pe-7s-like" />
               </button>
-              <button
+              {/* <button
                 onClick={() => setModalShow(true)}
                 title="Quick View"
               >
                 <i className="pe-7s-look" />
-              </button>
+              </button> */}
             </div>
             <div className="cart-action-overlay">
               {hasVariants ? (
@@ -224,6 +224,7 @@ const ProductGridListSingle = ({
         </div>
       )}
 
+      {/* ProductModal — commented out
       <ProductModal
         show={modalShow}
         onHide={() => setModalShow(false)}
@@ -234,6 +235,7 @@ const ProductGridListSingle = ({
         finalDiscountedPrice={finalStrike ? finalPrice : null}
         wishlistItem={wishlistArr[0]}
       />
+      */}
     </Fragment>
   );
 };
