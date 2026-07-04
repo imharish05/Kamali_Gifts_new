@@ -1,4 +1,4 @@
-import { getImgUrl } from "../../helpers/imageUrl";
+import { getImgUrl, resolveImageAsArray } from "../../helpers/imageUrl";
 import { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import clsx from "clsx";
@@ -29,40 +29,19 @@ const ProductGridSingle = ({
   // Priority: product.image[0] → product.image[1] → Variants[0].image → fallback
   const hasVariants = Array.isArray(product.Variants) && product.Variants.length > 0;
 
-  const productImages = Array.isArray(product.image)
-    ? product.image.filter(Boolean)
-    : typeof product.image === 'string'
-      ? (() => { try { const p = JSON.parse(product.image); return Array.isArray(p) ? p.filter(Boolean) : []; } catch { return []; } })()
-      : [];
+  const productImages = resolveImageAsArray(product.image);
+  const variantImages = hasVariants
+    ? product.Variants.flatMap(v => resolveImageAsArray(v.image)).filter(Boolean)
+    : [];
 
-  const getFirstImage = (imageField) => {
-    if (!imageField) return null;
-    if (Array.isArray(imageField)) return imageField[0];
-    if (typeof imageField === 'string' && imageField.trim().startsWith('[')) {
-      try {
-        const parsed = JSON.parse(imageField);
-        return Array.isArray(parsed) ? parsed[0] : imageField;
-      } catch {
-        return imageField;
-      }
-    }
-    return imageField;
-  };
+  const allImages = productImages.length ? productImages : variantImages;
 
-  // If product has no main images, fall back to first variant's image
-  const variantFallbackImg =
-    productImages.length === 0 && hasVariants
-      ? (getFirstImage(product.Variants.find(v => v.image)?.image) || null)
-      : null;
+  const mainImage = allImages[0]
+    ? getImgUrl(allImages[0])
+    : process.env.PUBLIC_URL + "/assets/img/products/products-1.jpeg";
 
-  const mainImage = productImages[0]
-    ? getImgUrl(productImages[0])
-    : variantFallbackImg
-      ? getImgUrl(variantFallbackImg)
-      : process.env.PUBLIC_URL + "/assets/img/products/products-1.jpeg";
-
-  const hoverImage = productImages.length > 1
-    ? getImgUrl(productImages[1])
+  const hoverImage = allImages.length > 1
+    ? getImgUrl(allImages[1])
     : null;
 
   // ── Pricing ───────────────────────────────────────────────────────────────

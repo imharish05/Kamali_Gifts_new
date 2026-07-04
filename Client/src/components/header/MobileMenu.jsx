@@ -1,5 +1,4 @@
 import React from "react";
-import MobileMenuSearch from "./sub-components/MobileSearch";
 import MobileNavMenu from "./sub-components/MobileNavMenu";
 import MobileWidgets from "./sub-components/MobileWidgets";
 import { Link } from "react-router-dom";
@@ -31,8 +30,7 @@ const MobileMenu = () => {
           </button>
         </div>
 
-        {/* Search */}
-        <MobileMenuSearch />
+
 
         {/* Scrollable nav area */}
         <div className="offcanvas-inner-content">

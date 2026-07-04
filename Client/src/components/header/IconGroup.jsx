@@ -7,7 +7,7 @@ import { logoutAction } from "../../store/slices/authSlice";
 import cogoToast from "cogo-toast";
 // import "./IconGroup.css";
 
-const IconGroup = ({ iconWhiteClass }) => {
+const IconGroup = ({ iconWhiteClass, mobileSearchActive, setMobileSearchActive }) => {
   const [searchQuery, setSearchQuery]     = useState("");
   const [searchActive, setSearchActive]   = useState(false);
   const [accountOpen,  setAccountOpen]    = useState(false);
@@ -151,6 +151,17 @@ const IconGroup = ({ iconWhiteClass }) => {
             </>
           )}
         </div>
+      </div>
+
+      {/* ── Mobile/Tablet Search Trigger ── */}
+      <div className="same-style header-search-mobile d-block d-lg-none">
+        <button
+          onClick={() => setMobileSearchActive(v => !v)}
+          aria-label="Toggle Search"
+          style={{ background: "none", border: "none", padding: 0, outline: "none" }}
+        >
+          <i className="pe-7s-search" />
+        </button>
       </div>
 
       {/* ── Wishlist ── */}

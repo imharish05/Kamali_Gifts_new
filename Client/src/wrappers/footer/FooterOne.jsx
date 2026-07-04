@@ -327,7 +327,7 @@ const FooterOne = ({ containerClass, extraFooterClass }) => {
           {/* ── Bottom bar ── */}
           <div className="km-bottom-bar">
             <span className="km-copyright">
-              © {new Date().getFullYear()} Kamali Gifts & Crafts. All rights reserved.
+              © {new Date().getFullYear()} Kamaligifts Factory. All rights reserved.
             </span>
             <span className="km-copyright">
   Developed by{" "}
