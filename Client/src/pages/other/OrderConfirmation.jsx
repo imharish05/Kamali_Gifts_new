@@ -6,10 +6,11 @@ import LayoutOne from "../../layouts/LayoutOne";
 import { isColourKey, isHexColor } from "../../helpers/product";
 
 import { useEffect } from "react";        // add if not already there
-import { useDispatch } from "react-redux"; // add if not already there
+import { useDispatch, useSelector } from "react-redux"; // add if not already there
 import { refreshProductsSilently } from "../../store/services/productService";
 import { clearCheckout } from "../../store/slices/checkout-slice";
 import { replaceCart } from "../../store/slices/cart-slice";
+import { loginSuccess, clearPendingAutoLogin } from "../../store/slices/authSlice";
 import api from "../../api/axios";
 
 const parseJson = (val) => {
@@ -17,12 +18,30 @@ const parseJson = (val) => {
   try { return JSON.parse(val); } catch { return val; }
 };
 
+const deepParse = (val) => {
+  let result = val;
+  for (let i = 0; i < 5; i++) {
+    if (typeof result !== "string") break;
+    let cleanVal = result.replace(/&quot;/g, '"');
+    const next = parseJson(cleanVal);
+    if (next === result || next === cleanVal) break; // no change, stop
+    result = next;
+  }
+  return result;
+};
+
 const getOrderItemImage = (img, selectedVariant) => {
   const variantImg = selectedVariant?.image;
-  if (variantImg) return getImgUrl(variantImg);
-  const arr = Array.isArray(img) ? img : parseJson(img);
-  const raw = Array.isArray(arr) ? arr[0] : (typeof img === "string" ? img : null);
-  return raw ? getImgUrl(raw) : "/assets/img/products/products-1.jpeg";
+  const unwrappedVariant = deepParse(variantImg);
+  const rawVariant = Array.isArray(unwrappedVariant) ? unwrappedVariant[0] : (typeof unwrappedVariant === "string" ? unwrappedVariant : null);
+  
+  if (rawVariant) {
+    return getImgUrl(rawVariant);
+  }
+  
+  const unwrappedImg = deepParse(img);
+  const rawImg = Array.isArray(unwrappedImg) ? unwrappedImg[0] : (typeof unwrappedImg === "string" ? unwrappedImg : null);
+  return rawImg ? getImgUrl(rawImg) : "/assets/img/products/products-1.jpeg";
 };
 
 const resolveVariantTags = (item) => {
@@ -175,36 +194,44 @@ const OrderConfirmation = () => {
 
   const dispatch = useDispatch();
 
-useEffect(() => {
-  // ── After successful order: refresh products + cart silently ──────────────
-  // This ensures:
-  //   1. Product stock in Redux reflects the newly depleted inventory
-  //   2. Cart is cleared on server (in case it wasn't by checkout flow)
-  //   3. Buy Now / Add to Cart buttons become disabled for OOS products
-  //   4. Next Buy Now attempt uses fresh stock data → no empty checkout toast
+  const { isAuthenticated, pendingAutoLoginEmail, pendingAutoLoginPassword } = useSelector(state => state.auth);
 
-  const syncAfterOrder = async () => {
-    // 1. Refresh all product stock data silently in background
-    refreshProductsSilently();
-
-    // 2. Ensure checkout slice is cleared (guard for browser back-button case)
-    dispatch(clearCheckout());
-
-    // 3. Refresh cart from server (handles any edge-case where cart wasn't cleared)
-    try {
-      const res = await api.get("/cart");
-      if (res.data && Array.isArray(res.data) && res.data.length === 0) {
-        dispatch(replaceCart([]));
-      }
-    } catch (err) {
-      // Non-fatal — cart sync failure should not break the confirmation page
-      console.warn("[OrderConfirmation] Cart sync failed:", err.message);
+  useEffect(() => {
+    // ── Silent auto-login if pending credentials exist ─────────────────────────
+    if (pendingAutoLoginEmail && pendingAutoLoginPassword && !isAuthenticated) {
+      api.post("/auth/login", {
+        email: pendingAutoLoginEmail,
+        password: pendingAutoLoginPassword
+      }).then(res => {
+        dispatch(loginSuccess(res.data));
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify({
+          id: res.data.id, name: res.data.name,
+          email: res.data.email, phone: res.data.phone, role: res.data.role
+        }));
+        dispatch(clearPendingAutoLogin());
+      }).catch(() => {
+        dispatch(clearPendingAutoLogin());
+      });
     }
-  };
 
-  syncAfterOrder();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []); // run once on mount
+    // ── After successful order: refresh products + cart silently ──────────────
+    const syncAfterOrder = async () => {
+      refreshProductsSilently();
+      dispatch(clearCheckout());
+      try {
+        const res = await api.get("/cart");
+        if (res.data && Array.isArray(res.data) && res.data.length === 0) {
+          dispatch(replaceCart([]));
+        }
+      } catch (err) {
+        console.warn("[OrderConfirmation] Cart sync failed:", err.message);
+      }
+    };
+
+    syncAfterOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount
 
   const stateForDownload = {
     orderId, referenceSlug, cartItems, selectedAddr, paymentMethod,
@@ -213,6 +240,22 @@ useEffect(() => {
 
   return (
     <Fragment>
+      <style>{`
+        @media (max-width: 576px) {
+          .order-card {
+            padding: 16px 12px !important;
+          }
+          .order-item-row {
+            padding: 14px 6px !important;
+          }
+          .order-header-row {
+            padding: 10px 6px !important;
+          }
+          .order-item-meta {
+            gap: 15px !important;
+          }
+        }
+      `}</style>
       <SEO titleTemplate="Order Confirmed — Kamali Gifts" description="Your order has been placed successfully." />
       <LayoutOne headerTop="visible">
         <div className="container" style={{ padding: "30px 15px" }}>
@@ -258,7 +301,7 @@ useEffect(() => {
 
             {/* ── Items (UNCHANGED) ──────────────────────────────────────── */}
             <div className="col-lg-7 mb-3">
-              <div style={cardStyle}>
+              <div style={cardStyle} className="order-card">
                 <h4 style={cardTitle}>📦 Items Ordered</h4>
                 <div style={{
                   display: "flex",
@@ -271,18 +314,18 @@ useEffect(() => {
                   color: "#6b7280",
                   textTransform: "uppercase",
                   letterSpacing: "0.04em"
-                }}>
+                }} className="order-header-row">
                   <span>Product</span>
-                  <span style={{ display: "flex", gap: 40 }}>
-                    <span>Qty</span>
-                    <span>Price</span>
-                  </span>
+                  <div style={{ display: "flex", gap: 20 }} className="order-item-meta">
+                    <span style={{ width: 40, textAlign: "center" }}>Qty</span>
+                    <span style={{ width: 80, textAlign: "right" }}>Price</span>
+                  </div>
                 </div>
                 <div>
                   {cartItems.map((item, i) => {
                       const variantTags = resolveVariantTags(item);
                       return (
-                        <div key={i} style={{ borderBottom: "1px solid #f0f0f0", padding: "14px 0" }}>
+                        <div key={i} style={{ borderBottom: "1px solid #f0f0f0", padding: "14px 12px" }} className="order-item-row">
                           {/* ── Item main row: img + name + qty + price (single div) ── */}
                           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                             <div style={{ display: "flex", alignItems: "flex-start", gap: 12, minWidth: 0 }}>
@@ -418,9 +461,9 @@ useEffect(() => {
 })()}
                               </div>
                             </div>
-                            <div style={{ display: "flex", gap: 40, flexShrink: 0, paddingTop: 2 }}>
-                              <span style={{ fontSize: 14, color: "#374151", minWidth: 18, textAlign: "center" }}>{item.quantity}</span>
-                              <span style={{ fontSize: 14, fontWeight: 600, color: "#111", minWidth: 64, textAlign: "right" }}>
+                            <div style={{ display: "flex", gap: 20, flexShrink: 0, paddingTop: 2 }} className="order-item-meta">
+                              <span style={{ fontSize: 14, color: "#374151", width: 40, textAlign: "center" }}>{item.quantity}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: "#111", width: 80, textAlign: "right" }}>
                                 ₹{(item.price * item.quantity).toFixed(2)}
                               </span>
                             </div>
@@ -642,7 +685,7 @@ useEffect(() => {
 
               {/* ── NEW: Coupon Information card ──────────────────────────── */}
               {couponDiscount > 0 && couponCode && (
-                <div style={{ ...cardStyle, marginTop: 16,marginBottom: 16, background: "#f9fff9", border: "1px solid #c8e6c9" }}>
+                <div style={{ ...cardStyle, marginTop: 16,marginBottom: 16, background: "#f9fff9", border: "1px solid #c8e6c9" }} className="order-card">
                   <h4 style={{ ...cardTitle, color: "#27ae60", borderBottomColor: "#c8e6c9" }}>🏷️ Coupon Applied</h4>
                   <div style={infoRow}>
                     <span style={infoLabel}>Code</span>
@@ -668,7 +711,7 @@ useEffect(() => {
             <div className="col-lg-5">
 
               {/* ── Delivery Details (UNCHANGED) ─────────────────────────── */}
-              <div style={{ ...cardStyle, marginBottom: 16 }}>
+              <div style={{ ...cardStyle, marginBottom: 16 }} className="order-card">
                 <h4 style={cardTitle}>🏠 Delivery Details</h4>
                 <div style={infoRow}>
                   <span style={infoLabel}>Name</span>
@@ -697,7 +740,7 @@ useEffect(() => {
               </div>
 
               {/* ── Payment (UNCHANGED base, new Partial COD callout added) ─ */}
-              <div style={{ ...cardStyle, marginBottom: 16 }}>
+              <div style={{ ...cardStyle, marginBottom: 16 }} className="order-card">
                 <h4 style={cardTitle}>💳 Payment</h4>
                 <div style={infoRow}>
                   <span style={infoLabel}>Method</span>

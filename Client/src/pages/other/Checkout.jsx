@@ -17,6 +17,7 @@ import api from "../../api/axios";
 import cogoToast from "cogo-toast";
 import "./Checkout.css";
 import { useRef } from "react";
+import { loginSuccess, storePendingAutoLogin } from "../../store/slices/authSlice";
 
 // ── Helper: calculate total cart weight (in kg) ─────────────────────────────
 const calculateTotalWeight = (items) => {
@@ -52,9 +53,20 @@ const checkShippingServiceability = async (pincode, orderValue, weight = 0.5) =>
 
 // Resolve cart item image (array or JSON string) → full URL
 const parseJson = (v) => { try { return JSON.parse(v); } catch { return v; } };
+const deepParse = (val) => {
+  let result = val;
+  for (let i = 0; i < 5; i++) {
+    if (typeof result !== "string") break;
+    let cleanVal = result.replace(/&quot;/g, '"');
+    const next = parseJson(cleanVal);
+    if (next === result || next === cleanVal) break; // no change, stop
+    result = next;
+  }
+  return result;
+};
 const resolveCartImg = (img) => {
-  const arr = Array.isArray(img) ? img : parseJson(img);
-  const raw = Array.isArray(arr) ? arr[0] : (typeof img === "string" ? img : null);
+  const unwrapped = deepParse(img);
+  const raw = Array.isArray(unwrapped) ? unwrapped[0] : (typeof unwrapped === "string" ? unwrapped : null);
   return raw ? getImgUrl(raw) : "/assets/img/products/products-1.jpeg";
 };
 
@@ -254,7 +266,7 @@ const Checkout = () => {
   const { addresses, activeAddressId, loading: addrLoading } = useSelector(
     (s) => s.address
   );
-  const user = useSelector((s) => s.auth?.user);
+  const { user, isAuthenticated } = useSelector((s) => s.auth || {});
 
   /* ── Route & Session Protection ── */
   useEffect(() => {
@@ -333,6 +345,23 @@ const Checkout = () => {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
 
+  /* ── Guest Checkout State ── */
+  // Email field in address form (used for both guest order + account creation)
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestEmailError, setGuestEmailError] = useState("");
+  // "Create an account?" toggle
+  const [createAccount, setCreateAccount] = useState(false);
+  const [createPassword, setCreatePassword] = useState("");
+  const [createPasswordError, setCreatePasswordError] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  // Inline "Returning customer? Click here to login" form
+  const [loginFormOpen, setLoginFormOpen] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+
   /* ── Fetch addresses ── */
   useEffect(() => {
     if (user?.id) dispatch(fetchAddresses());
@@ -380,7 +409,7 @@ const Checkout = () => {
       }
     };
     checkShipping();
-  }, [selectedShippingAddrId, shippingPricing.subtotal, checkoutItems]);
+  }, [selectedShippingAddrId, addrForm.pincode, shippingPricing.subtotal, checkoutItems, isAuthenticated]);
 
   const handleSelectCourier = (selected) => {
     setShippingInfo((prev) => ({
@@ -466,6 +495,141 @@ const Checkout = () => {
     }
   }, [addresses, billingSameAsShipping, selectedShippingAddrId]);
 
+  /* ── Inline login handler (Returning Customer form) ── */
+  const handleInlineLogin = async () => {
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      setLoginError("Please enter email and password.");
+      return;
+    }
+    setLoggingIn(true);
+    setLoginError("");
+    try {
+      const res = await api.post("/auth/login", { email: loginEmail, password: loginPassword });
+      dispatch(loginSuccess(res.data));
+      // Store token explicitly
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify({ id: res.data.id, name: res.data.name, email: res.data.email, phone: res.data.phone, role: res.data.role }));
+      setLoginFormOpen(false);
+      setLoginEmail("");
+      setLoginPassword("");
+      cogoToast.success("Logged in successfully!", { position: "top-center" });
+      // Load addresses for newly logged-in user
+      dispatch(fetchAddresses());
+    } catch (err) {
+      setLoginError(err.response?.data?.message || "Invalid email or password.");
+    } finally {
+      setLoggingIn(false);
+    }
+  };
+
+  /* ── Inline Register & Login handler ── */
+  const handleRegisterInline = async () => {
+    // 1. Validate fields
+    const errs = {};
+    if (!addrForm.fullName.trim()) errs.fullName = "Full name is required";
+    if (!addrForm.phone.trim() || addrForm.phone.replace(/\D/g, "").length < 10)
+      errs.phone = "Valid 10-digit mobile required";
+    if (!addrForm.street.trim()) errs.street = "Street address is required";
+    if (!addrForm.city.trim()) errs.city = "City is required";
+    if (!addrForm.state.trim()) errs.state = "State is required";
+    if (!addrForm.pincode.trim() || addrForm.pincode.replace(/\D/g, "").length < 6)
+      errs.pincode = "Valid 6-digit pincode required";
+
+    if (Object.keys(errs).length > 0) {
+      setAddrErrors(errs);
+      cogoToast.warn("Please correct the errors in the address form before registering.", { position: "top-center" });
+      return;
+    }
+    setAddrErrors({});
+
+    if (!guestEmail.trim()) {
+      setGuestEmailError("Email address is required");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(guestEmail.trim())) {
+      setGuestEmailError("Please enter a valid email address.");
+      return;
+    }
+    setGuestEmailError("");
+
+    if (!createPassword || createPassword.length < 6) {
+      setCreatePasswordError("Password must be at least 6 characters.");
+      return;
+    }
+    setCreatePasswordError("");
+
+    setRegistering(true);
+    try {
+      // 2. Call register API
+      const registerPayload = {
+        name: addrForm.fullName.trim(),
+        email: guestEmail.trim(),
+        password: createPassword,
+        phone: addrForm.phone.trim(),
+      };
+
+      const regRes = await api.post("/auth/register", registerPayload);
+      const registeredUser = regRes.data;
+      const loginToken = regRes.data.token;
+
+      // Store JWT in localStorage & update redux auth state
+      localStorage.setItem("token", loginToken);
+      localStorage.setItem("user", JSON.stringify({
+        id: registeredUser.id,
+        name: registeredUser.name,
+        email: registeredUser.email,
+        phone: registeredUser.phone,
+        role: registeredUser.role
+      }));
+      dispatch(loginSuccess({
+        token: loginToken,
+        id: registeredUser.id,
+        name: registeredUser.name,
+        email: registeredUser.email,
+        phone: registeredUser.phone,
+        role: registeredUser.role
+      }));
+
+      // 3. Save address to profile as default
+      const addrPayload = {
+        fullName: addrForm.fullName.trim(),
+        phone: addrForm.phone.trim(),
+        street: addrForm.street.trim(),
+        apartment: addrForm.apartment.trim(),
+        city: addrForm.city.trim(),
+        state: addrForm.state.trim(),
+        pincode: addrForm.pincode.trim(),
+        country: "India",
+        isDefault: true
+      };
+      await api.post("/address", addrPayload);
+
+      cogoToast.success("Registration successful! You are now logged in.", { position: "top-center" });
+
+      // Clean up states
+      setCreateAccount(false);
+      setCreatePassword("");
+      // Fetch fresh addresses for this newly registered user
+      dispatch(fetchAddresses());
+    } catch (err) {
+      console.error("Inline registration failed:", err);
+      const errMsg = err.response?.data?.message?.toLowerCase() || "";
+      if (
+        err.response?.status === 409 ||
+        err.response?.status === 400 ||
+        errMsg.includes("email already") ||
+        errMsg.includes("already registered")
+      ) {
+        cogoToast.error("This email is already registered. Please log in using the link above.", { position: "top-center" });
+      } else {
+        cogoToast.error(err.response?.data?.message || "Failed to register account. Please try again.", { position: "top-center" });
+      }
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   /* ── Address validation ── */
   const validateAddr = () => {
     const errs = {};
@@ -480,6 +644,28 @@ const Checkout = () => {
     setAddrErrors(errs);
     return Object.keys(errs).length === 0;
   };
+
+  /* ── Guest field validation ── */
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validateGuestFields = () => {
+    let valid = true;
+    if (!guestEmail.trim() || !EMAIL_REGEX.test(guestEmail.trim())) {
+      setGuestEmailError("Please enter a valid email address.");
+      valid = false;
+    } else {
+      setGuestEmailError("");
+    }
+    if (createAccount) {
+      if (!createPassword || createPassword.length < 6) {
+        setCreatePasswordError("Password must be at least 6 characters.");
+        valid = false;
+      } else {
+        setCreatePasswordError("");
+      }
+    }
+    return valid;
+  };
+
 
   const handleSaveNewAddr = async () => {
     if (!validateAddr()) return;
@@ -549,11 +735,25 @@ const Checkout = () => {
     setCouponError("");
   };
 
-  /* ── Derived values ── */
-  const selectedShippingAddr = addresses.find((a) => a.id === selectedShippingAddrId);
-  const selectedBillingAddr = billingSameAsShipping
-    ? selectedShippingAddr
-    : addresses.find((a) => a.id === selectedBillingAddrId);
+  const guestShippingAddr = !isAuthenticated ? {
+    id: "guest",
+    fullName: addrForm.fullName,
+    phone: addrForm.phone,
+    street: addrForm.street,
+    apartment: addrForm.apartment,
+    city: addrForm.city,
+    state: addrForm.state,
+    pincode: addrForm.pincode,
+    country: addrForm.country
+  } : null;
+
+  const selectedShippingAddr = isAuthenticated
+    ? addresses.find((a) => a.id === selectedShippingAddrId)
+    : guestShippingAddr;
+
+  const selectedBillingAddr = isAuthenticated
+    ? (billingSameAsShipping ? selectedShippingAddr : addresses.find((a) => a.id === selectedBillingAddrId))
+    : guestShippingAddr;
 
   // Partial COD is available only if:
   // 1. Shiprocket says COD is available for this pincode
@@ -589,13 +789,64 @@ const Checkout = () => {
 
   /* ── Place order ── */
   const handlePlaceOrder = async () => {
-    if (!selectedShippingAddr) {
-      cogoToast.warn("Please select a shipping address", { position: "top-center" });
-      return;
+    if (!isAuthenticated) {
+      if (!createAccount) {
+        cogoToast.error("Please log in or select 'Create an account?' below to proceed with your payment.", { position: "top-center" });
+        return;
+      }
+      // Guest flow: validate address form + email + optional password
+      if (!validateAddr()) return;
+      if (!validateGuestFields()) {
+        return;
+      }
+    } else {
+      if (!selectedShippingAddr) {
+        cogoToast.warn("Please select a shipping address", { position: "top-center" });
+        return;
+      }
+      if (!billingSameAsShipping && !selectedBillingAddr) {
+        cogoToast.warn("Please select a billing address", { position: "top-center" });
+        return;
+      }
     }
-    if (!billingSameAsShipping && !selectedBillingAddr) {
-      cogoToast.warn("Please select a billing address", { position: "top-center" });
-      return;
+
+    // If guest wants to create an account — register NOW before order
+    let registeredUser = null;
+    if (!isAuthenticated && createAccount) {
+      try {
+        const regRes = await api.post("/auth/register", {
+          name: addrForm.fullName.trim(),
+          email: guestEmail.trim(),
+          password: createPassword,
+          phone: addrForm.phone.trim(),
+        });
+        registeredUser = regRes.data;
+        // Store credentials for auto-login (in-memory only, cleared after use)
+        dispatch(storePendingAutoLogin({ email: guestEmail.trim(), password: createPassword }));
+        // Log in immediately so subsequent API calls carry auth
+        dispatch(loginSuccess(registeredUser));
+        localStorage.setItem("token", registeredUser.token);
+        localStorage.setItem("user", JSON.stringify({
+          id: registeredUser.id, name: registeredUser.name,
+          email: registeredUser.email, phone: registeredUser.phone, role: registeredUser.role
+        }));
+        // Save address to new account
+        try {
+          await api.post("/address", { ...addrForm, isDefault: true });
+          dispatch(fetchAddresses());
+        } catch (addrErr) {
+          console.warn("[Checkout] Could not save address to new account:", addrErr.message);
+        }
+        cogoToast.success("Account created! Continuing with your order...", { position: "top-center" });
+      } catch (regErr) {
+        const msg = regErr.response?.data?.message || "Could not create account.";
+        if (msg.toLowerCase().includes("already registered")) {
+          cogoToast.error("This email is already registered. Please use the 'Returning customer?' login above.", { position: "top-center" });
+        } else {
+          cogoToast.error(msg, { position: "top-center" });
+        }
+        return;
+      }
     }
 
     try {
@@ -666,8 +917,6 @@ const Checkout = () => {
         customisationDetails: item.customisationDetails || null,
       })),
       totalAmount: shippingPricing.grandTotal,
-      shippingAddressId: selectedShippingAddrId,
-      billingAddressId: selectedBillingAddrId,
       paymentMethod,
       couponCode: shippingPricing.couponCode || null,
       couponDiscount: shippingPricing.couponDiscount || 0,
@@ -679,6 +928,24 @@ const Checkout = () => {
       gstAmount: shippingPricing.gstAmount || 0,
       courier: shippingInfo?.courier || null,
       estimatedDeliveryDays: shippingInfo?.estimatedDays || null,
+      // Guest-specific fields (only sent when not authenticated)
+      ...(isAuthenticated ? {
+        shippingAddressId: selectedShippingAddrId,
+        billingAddressId: selectedBillingAddrId,
+      } : {
+        guestEmail: guestEmail.trim(),
+        guestAddress: {
+          fullName: addrForm.fullName.trim(),
+          phone: addrForm.phone.trim(),
+          street: addrForm.street.trim(),
+          apartment: addrForm.apartment?.trim() || "",
+          city: addrForm.city.trim(),
+          state: addrForm.state.trim(),
+          pincode: addrForm.pincode.trim(),
+          country: addrForm.country || "India",
+          addressType: addrForm.addressType || "Home",
+        },
+      }),
     };
 
     if (paymentMethod === "partial_cod") {
@@ -1018,16 +1285,269 @@ const Checkout = () => {
               </h2>
             </div>
 
+            {/* ── Returning Customer Text Link ── */}
+            {!isAuthenticated && (
+              <div className="kco-returning-customer-row">
+                <span className="kco-returning-text">
+                  Returning customer?{" "}
+                  <button
+                    className="kco-returning-link"
+                    onClick={() => setLoginFormOpen(p => !p)}
+                    type="button"
+                  >
+                    Click here to login
+                  </button>
+                </span>
+
+                {/* Sliding login form */}
+                <div className={`kco-login-slide ${loginFormOpen ? "open" : ""}`}>
+                  <div className="kco-login-slide-inner">
+                    <p className="kco-login-slide-note">
+                      If you have shopped with us before, please enter your login details below.
+                    </p>
+                    {loginError && (
+                      <div className="kco-login-err">{loginError}</div>
+                    )}
+                    <div className="kco-field-grid">
+                      <div className="kco-field">
+                        <label className="kco-field-label">Email Address</label>
+                        <input
+                          className="kco-input"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={loginEmail}
+                          onChange={e => setLoginEmail(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && handleInlineLogin()}
+                          autoComplete="email"
+                        />
+                      </div>
+                      <div className="kco-field">
+                        <label className="kco-field-label">Password</label>
+                        <input
+                          className="kco-input"
+                          type="password"
+                          placeholder="Your password"
+                          value={loginPassword}
+                          onChange={e => setLoginPassword(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && handleInlineLogin()}
+                          autoComplete="current-password"
+                        />
+                      </div>
+                    </div>
+                    <div className="kco-login-actions">
+                      <button
+                        className="kco-login-submit-btn"
+                        onClick={handleInlineLogin}
+                        disabled={loggingIn}
+                      >
+                        {loggingIn ? "Logging in..." : "Login"}
+                      </button>
+                      <Link to="/forgot-password" className="kco-forgot-link">
+                        Forgot password?
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── Two-column layout ── */}
             <div className="kco-layout">
 
               {/* ══ LEFT COLUMN ══ */}
               <div className="kco-left">
 
-                {/* Shipping & Billing Address Card */}
+                {/* Guest Address Form — shown only when NOT logged in */}
+                {!isAuthenticated && (
+                  <div className="kco-card kco-guest-form-card">
+                    <div className="kco-card-header">
+                      <h3 className="kco-card-title">Shipping &amp; Billing Address</h3>
+                    </div>
+
+                    <div className="kco-type-row">
+                      {["Home", "Work", "Other"].map((t) => (
+                        <button
+                          key={t}
+                          className={`kco-type-btn ${addrForm.addressType === t ? "active" : ""}`}
+                          onClick={() => setAddrForm((f) => ({ ...f, addressType: t }))}
+                          type="button"
+                        >
+                          {t === "Home" ? "🏠" : t === "Work" ? "🏢" : "📍"} {t}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="kco-field-grid">
+                      <FormField label="Full Name *" error={addrErrors.fullName}>
+                        <input
+                          className={`kco-input ${addrErrors.fullName ? "error" : ""}`}
+                          value={addrForm.fullName}
+                          onChange={(e) => setAddrForm((f) => ({ ...f, fullName: e.target.value }))}
+                          placeholder="Enter your full name"
+                        />
+                      </FormField>
+                      <FormField label="Mobile Number *" error={addrErrors.phone}>
+                        <input
+                          className={`kco-input ${addrErrors.phone ? "error" : ""}`}
+                          value={addrForm.phone}
+                          onChange={(e) => setAddrForm((f) => ({ ...f, phone: e.target.value }))}
+                          placeholder="10-digit mobile"
+                          type="tel"
+                          maxLength={10}
+                        />
+                      </FormField>
+                    </div>
+
+                    {/* Email Address field */}
+                    <FormField label="Email Address *" error={guestEmailError}>
+                      <input
+                        className={`kco-input ${guestEmailError ? "error" : ""}`}
+                        type="email"
+                        value={guestEmail}
+                        onChange={(e) => { setGuestEmail(e.target.value); setGuestEmailError(""); }}
+                        placeholder="your@email.com"
+                        autoComplete="email"
+                      />
+                    </FormField>
+
+                    <FormField label="Street / House No. *" error={addrErrors.street}>
+                      <input
+                        className={`kco-input ${addrErrors.street ? "error" : ""}`}
+                        value={addrForm.street}
+                        onChange={(e) => setAddrForm((f) => ({ ...f, street: e.target.value }))}
+                        placeholder="House / flat no., road name"
+                      />
+                    </FormField>
+                    <FormField label="Apartment / Landmark (optional)">
+                      <input
+                        className="kco-input"
+                        value={addrForm.apartment}
+                        onChange={(e) => setAddrForm((f) => ({ ...f, apartment: e.target.value }))}
+                        placeholder="Building name, floor, landmark"
+                      />
+                    </FormField>
+
+                    <div className="kco-field-grid">
+                      <FormField label="City *" error={addrErrors.city}>
+                        <input
+                          className={`kco-input ${addrErrors.city ? "error" : ""}`}
+                          value={addrForm.city}
+                          onChange={(e) => setAddrForm((f) => ({ ...f, city: e.target.value }))}
+                          placeholder="City"
+                        />
+                      </FormField>
+                      <FormField label="State *" error={addrErrors.state}>
+                        <input
+                          className={`kco-input ${addrErrors.state ? "error" : ""}`}
+                          value={addrForm.state}
+                          onChange={(e) => setAddrForm((f) => ({ ...f, state: e.target.value }))}
+                          placeholder="State"
+                        />
+                      </FormField>
+                    </div>
+
+                    <div className="kco-field-grid">
+                      <FormField label="Pincode *" error={addrErrors.pincode}>
+                        <input
+                          className={`kco-input ${addrErrors.pincode ? "error" : ""}`}
+                          value={addrForm.pincode}
+                          onChange={(e) => setAddrForm((f) => ({ ...f, pincode: e.target.value }))}
+                          placeholder="6-digit pincode"
+                          maxLength={6}
+                          type="tel"
+                        />
+                      </FormField>
+                      <FormField label="Country">
+                        <input
+                          className="kco-input"
+                          value={addrForm.country}
+                          readOnly
+                          style={{ background: "#f5f5f7", color: "#888" }}
+                        />
+                      </FormField>
+                    </div>
+
+                    {/* Set as default address checkbox */}
+                    <label className="kco-default-check-row" style={{ display: "flex" }}>
+                      <input
+                        type="checkbox"
+                        checked={addrForm.isDefault}
+                        onChange={(e) => setAddrForm((f) => ({ ...f, isDefault: e.target.checked }))}
+                        style={{ accentColor: "#db1a5d" }}
+                      />
+                      Set as my default address
+                    </label>
+
+                    {/* Create an account? */}
+                    <div className="kco-create-account-section">
+                      <label className="kco-create-account-label">
+                        <input
+                          type="checkbox"
+                          checked={createAccount}
+                          onChange={(e) => {
+                            setCreateAccount(e.target.checked);
+                            if (!e.target.checked) { setCreatePassword(""); setCreatePasswordError(""); }
+                          }}
+                          style={{ accentColor: "#db1a5d" }}
+                        />
+                        <span>Create an account?</span>
+                      </label>
+
+                      {/* Sliding password field */}
+                      <div className={`kco-password-slide ${createAccount ? "visible" : ""}`}>
+                        <div className="kco-password-slide-inner">
+                          <FormField label="Password (min. 6 characters)" error={createPasswordError}>
+                            <div className="kco-password-wrap">
+                              <input
+                                className={`kco-input ${createPasswordError ? "error" : ""}`}
+                                type={showCreatePassword ? "text" : "password"}
+                                value={createPassword}
+                                onChange={(e) => { setCreatePassword(e.target.value); setCreatePasswordError(""); }}
+                                placeholder="Create a password"
+                                autoComplete="new-password"
+                              />
+                              <button
+                                type="button"
+                                className="kco-pw-toggle"
+                                onClick={() => setShowCreatePassword(p => !p)}
+                                tabIndex={-1}
+                              >
+                                {showCreatePassword ? "🙈" : "👁"}
+                              </button>
+                            </div>
+                          </FormField>
+                          <p className="kco-create-account-hint">
+                            Your account will be created with the email address above. You'll be logged in automatically after checkout.
+                          </p>
+                          <button
+                            type="button"
+                            className="kco-inline-register-btn"
+                            onClick={handleRegisterInline}
+                            disabled={registering}
+                          >
+                            {registering ? "Registering account..." : "Confirm & Register"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tip note if guest doesn't create account or log in */}
+                    {!createAccount && (
+                      <div className="kco-guest-tip-note">
+                        <span style={{ marginRight: 6, flexShrink: 0 }}>💡</span>
+                        <span>
+                          <strong>Note:</strong> Log in or check <strong>"Create an account?"</strong> above to track your order history and receive delivery updates!
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Shipping & Billing Address Card — shown when logged in */}
+                {isAuthenticated && (
                 <div className="kco-card">
                   <div className="kco-card-header">
-                    <h3 className="kco-card-title">Shipping & Billing Address</h3>
+                    <h3 className="kco-card-title">Shipping &amp; Billing Address</h3>
                     <button
                       className="kco-add-new-btn"
                       onClick={() => {
@@ -1298,6 +1818,7 @@ const Checkout = () => {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Payment Method Card */}
                 <div className="kco-card" style={{ marginTop: 24 }}>
@@ -1682,12 +2203,16 @@ const Checkout = () => {
                   <button
                     className="kco-place-order-btn"
                     onClick={handlePlaceOrder}
-                    disabled={placing || !selectedShippingAddr || !paymentMethod || checkingServiceability || (selectedShippingAddr && !shippingInfo)}
+                    disabled={
+                      placing ||
+                      !paymentMethod ||
+                      (isAuthenticated && (!selectedShippingAddr || checkingServiceability || (selectedShippingAddr && !shippingInfo)))
+                    }
                     style={{
                       width: "100%",
                       display: "block",
-                      opacity: placing || !selectedShippingAddr || !paymentMethod || checkingServiceability || (selectedShippingAddr && !shippingInfo) ? 0.5 : 1,
-                      cursor: placing || !selectedShippingAddr || !paymentMethod || checkingServiceability || (selectedShippingAddr && !shippingInfo) ? "not-allowed" : "pointer",
+                      opacity: placing || !paymentMethod || (isAuthenticated && (!selectedShippingAddr || checkingServiceability || (selectedShippingAddr && !shippingInfo))) ? 0.5 : 1,
+                      cursor: placing || !paymentMethod || (isAuthenticated && (!selectedShippingAddr || checkingServiceability || (selectedShippingAddr && !shippingInfo))) ? "not-allowed" : "pointer",
                       marginBottom: 16,
                       padding: "14px 20px",
                       borderRadius: "12px",
@@ -1699,13 +2224,6 @@ const Checkout = () => {
                       boxShadow: "0 4px 14px rgba(219,26,93,0.28)",
                       transition: "opacity 0.2s"
                     }}
-                    title={
-                      !selectedShippingAddr
-                        ? "Please select a shipping address first"
-                        : !paymentMethod
-                        ? "Please select a payment method"
-                        : ""
-                    }
                   >
                     {placing ? "Placing Order..." :
                       `Pay ₹${(paymentMethod === "partial_cod" ? (shippingInfo?.shippingCharge || 0) : grandTotalWithCOD).toFixed(2)} now`

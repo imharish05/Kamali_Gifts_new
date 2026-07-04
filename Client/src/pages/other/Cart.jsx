@@ -895,11 +895,6 @@ const Cart = () => {
                   <button
                     className="kg-checkout-btn"
                     onClick={() => {
-                      if (!isAuthenticated) {
-                        cogoToast.warn("Please login to proceed to checkout", { position: "top-center" });
-                        navigate(process.env.PUBLIC_URL + "/login?redirect=" + encodeURIComponent("/checkout"));
-                        return;
-                      }
                       dispatch(createCheckoutFromCart(cartItems));
                       navigate(process.env.PUBLIC_URL + "/checkout", {
                         state: {

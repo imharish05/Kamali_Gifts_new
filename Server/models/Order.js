@@ -11,8 +11,21 @@ const Order = sequelize.define(
     },
     userId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,   // null for guest orders
       field: "user_id",
+    },
+    // ── Guest order fields ────────────────────────────────────────────────────
+    // Populated when userId is null (guest checkout, no account)
+    guestEmail: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "guest_email",
+    },
+    // Inline address snapshot for guests (JSON: fullName, phone, street, city, state, pincode, country)
+    guestAddress: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "guest_address",
     },
     totalAmount: {
       type: DataTypes.DECIMAL(10, 2),
@@ -34,7 +47,7 @@ const Order = sequelize.define(
     },
     shippingAddressId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,   // null for guest orders (address stored in guestAddress JSON)
       field: "shipping_address_id",
       references: { model: "addresses", key: "id" },
       onDelete: "RESTRICT",

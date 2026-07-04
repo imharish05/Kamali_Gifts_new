@@ -3,6 +3,198 @@
    Kamali Gifts
 ═══════════════════════════════════════════════════ */
 
+/* ── Returning Customer Text Link ──────────────────── */
+.kco-returning-customer-row {
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.kco-returning-text {
+  font-size: 13.5px;
+  color: #555;
+  font-family: inherit;
+}
+
+.kco-returning-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #db1a5d;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+.kco-returning-link:hover {
+  color: #a8123f;
+}
+
+/* ── Sliding Login Form ─────────────────────────────── */
+.kco-login-slide {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  opacity: 0;
+}
+.kco-login-slide.open {
+  max-height: 380px;
+  opacity: 1;
+}
+.kco-login-slide-inner {
+  padding: 18px 20px 16px;
+  margin-top: 12px;
+  background: #fafafa;
+  border: 1.5px solid #f0d0db;
+  border-radius: 12px;
+}
+.kco-login-slide-note {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 14px 0;
+}
+.kco-login-err {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 13px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+.kco-login-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.kco-login-submit-btn {
+  background: linear-gradient(135deg, #db1a5d, #c01550);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: inherit;
+}
+.kco-login-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.kco-login-submit-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.kco-forgot-link {
+  font-size: 13px;
+  color: #db1a5d;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+
+/* ── Guest Form Card ─────────────────────────────────── */
+.kco-guest-form-card {
+  padding: 24px;
+}
+
+/* ── Email field & Create Account section ─────────────── */
+.kco-create-account-section {
+  margin-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 14px;
+}
+.kco-create-account-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+.kco-create-account-label input[type="checkbox"] {
+  accent-color: #db1a5d;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin: 0;
+}
+.kco-create-account-label span {
+  font-weight: 600;
+}
+
+/* ── Sliding Password Field ──────────────────────────── */
+.kco-password-slide {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+.kco-password-slide.visible {
+  max-height: 200px;
+  opacity: 1;
+}
+.kco-password-slide-inner {
+  padding-top: 14px;
+}
+.kco-create-account-hint {
+  font-size: 12px;
+  color: #888;
+  margin: 6px 0 0 0;
+  line-height: 1.4;
+}
+
+/* ── Password input with show/hide toggle ─────────────── */
+.kco-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.kco-password-wrap .kco-input {
+  padding-right: 40px;
+  width: 100%;
+}
+.kco-pw-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.kco-pw-toggle:hover {
+  opacity: 1;
+}
+
+/* ── Guest Tip Note ────────────────────────────────── */
+.kco-guest-tip-note {
+  margin-top: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.kco-guest-tip-note strong {
+  color: #db1a5d;
+}
+
 /* ── Page ─────────────────────────────────────────── */
 .kco-page {
   background: #ffffff;
@@ -1636,3 +1828,30 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+.kco-inline-register-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #db1a5d, #c01550);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(219, 26, 93, 0.25);
+  transition: all 0.2s ease;
+}
+.kco-inline-register-btn:hover:not(:disabled) {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(219, 26, 93, 0.35);
+}
+.kco-inline-register-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.kco-inline-register-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}

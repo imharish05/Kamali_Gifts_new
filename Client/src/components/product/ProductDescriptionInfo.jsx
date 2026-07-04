@@ -389,7 +389,7 @@ function ComboProductsSection({ combo, allProducts }) {
       {combo.description && <div className="pdp-combo__desc">{combo.description}</div>}
       <div className="pdp-combo__grid">
         {comboProducts.map((p, idx) => {
-          const img = Array.isArray(p.image) ? p.image[0] : p.image;
+          const img = p.image;
           const variants = Array.isArray(p.Variants) ? p.Variants : [];
           const price = variants.length > 0 ? parseFloat(variants[0].salesPrice || 0) : parseFloat(p.price || 0);
           return (
@@ -776,6 +776,8 @@ const ProductDescriptionInfo = ({
         ...localProduct,
         selectedVariantId: selectedVariant?.id || null,
         selectedVariantName: selectedVariant?.variantName || null,
+        selectedVariant: selectedVariant || null,
+        Variants: localProduct.Variants || [],
         selectedProductColor: variantColor,
         selectedProductSize: variantSize,
         price: selectedVariant ? parseFloat(selectedVariant.salesPrice) : (localProduct.price || 0),
@@ -804,11 +806,6 @@ const handleBuyNow = async () => {
     return;
   }
 
-  if (!isAuthenticated) {
-    cogoToast.warn("Please login to buy items", { position: "top-center" });
-    redirectToLogin();
-    return;
-  }
   if (!validateCart()) return;
 
     setIsBuyingNow(true);

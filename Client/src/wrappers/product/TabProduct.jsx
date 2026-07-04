@@ -81,39 +81,41 @@ const DealSection = ({ section, isLast, category }) => {
           <span className="deal-section__emoji">{section.emoji}</span>
           <h3 className="deal-section__name">{section.label}</h3>
         </div>
-        <div className="deal-section__arrows">
-          <button
-            className={clsx("deal-arrow", !canScrollLeft && "deal-arrow--hidden")}
-            onClick={() => scroll(-1)}
-            aria-label="Scroll left"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-          <button
-            className={clsx("deal-arrow", !canScrollRight && "deal-arrow--hidden")}
-            onClick={() => scroll(1)}
-            aria-label="Scroll right"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
       </div>
 
-      <div className="deal-scroll-track" ref={scrollRef}>
-        <div className="deal-scroll-inner">
-          <ProductGrid
-            category={category}
-            type={section.type}
-            sectionType={section.type}
-            limit={10}
-            spaceBottomClass="mb-0"
-            productsList={section.items}
-          />
+      <div className="deal-scroll-wrapper">
+        <button
+          className={clsx("deal-arrow deal-arrow--left", !canScrollLeft && "deal-arrow--hidden")}
+          onClick={() => scroll(-1)}
+          aria-label="Scroll left"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+
+        <div className="deal-scroll-track" ref={scrollRef}>
+          <div className="deal-scroll-inner">
+            <ProductGrid
+              category={category}
+              type={section.type}
+              sectionType={section.type}
+              limit={10}
+              spaceBottomClass="mb-0"
+              productsList={section.items}
+            />
+          </div>
         </div>
+
+        <button
+          className={clsx("deal-arrow deal-arrow--right", !canScrollRight && "deal-arrow--hidden")}
+          onClick={() => scroll(1)}
+          aria-label="Scroll right"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
       </div>
     </div>
   );

@@ -161,11 +161,11 @@ const Product = sequelize.define(
       allowNull: true,
       field: "shipping_class", // "fragile", "oversized", etc.
     },
-    // ── Partial COD & Customisation ─────────────────────────────────────────────
+        // ── Partial COD & Customisation ─────────────────────────────────────────────
     isPartialCodAvailable: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: false,
       field: "is_partial_cod_available",
     },
     // JSON array of customisation field configs e.g. [{type:'name'},{type:'font'},{type:'color'},{type:'note'}]

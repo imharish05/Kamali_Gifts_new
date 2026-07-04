@@ -108,7 +108,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/nav", navRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/address", protect, addressRoutes);
-app.use("/api/cart", protect, cartRoutes);
+app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", protect, wishlistRoutes);
 app.use("/api/compare", protect, compareRoutes);
 app.use("/api/blogs", protect, blogRoutes);
@@ -160,11 +160,15 @@ const startServer = async () => {
       await sequelize.query("ALTER TABLE users ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active';").catch(() => {});
       await sequelize.query("ALTER TABLE products ADD COLUMN is_partial_cod_available TINYINT(1) DEFAULT 1;").catch(() => {});
       await sequelize.query("ALTER TABLE orders ADD COLUMN awb_code VARCHAR(100) NULL;").catch(() => {});
+      await sequelize.query("ALTER TABLE orders ADD COLUMN guest_email VARCHAR(255) NULL;").catch(() => {});
+      await sequelize.query("ALTER TABLE orders ADD COLUMN guest_address TEXT NULL;").catch(() => {});
+      await sequelize.query("ALTER TABLE orders MODIFY user_id CHAR(36) BINARY NULL;").catch(() => {});
+      await sequelize.query("ALTER TABLE orders MODIFY shipping_address_id CHAR(36) BINARY NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE products ADD COLUMN customisation_fields JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE cart_items ADD COLUMN customisation_details JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE order_items ADD COLUMN customisation_details JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE Variants MODIFY COLUMN image TEXT;").catch(() => {});
-      console.log("✅ Users, products and variants table columns verified");
+      console.log("✅ Users, products, variants and orders table columns verified");
     } catch (alterErr) {
       console.warn("⚠️ Column alter query failed (ignoring):", alterErr.message);
     }

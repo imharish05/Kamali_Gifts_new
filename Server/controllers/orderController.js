@@ -356,43 +356,72 @@ const createOrder = async (req, res, next) => {
       shippingCharge,
       estimatedDeliveryDays,
       advancePaid: clientAdvancePaid,
+      // Guest checkout fields
+      guestEmail,
+      guestAddress,      // inline address object for guests (no account)
     } = req.body;
 
     // Accept either taxAmount or gstAmount (frontend uses gstAmount)
     const receivedTax = parseFloat(taxAmount ?? gstAmount ?? 0) || 0;
 
+    const isGuest = !req.user;   // optionalAuth: req.user is null for guests
+
     const shippingId = shippingAddressId || req.body.shippingAddress?.id;
     const billingId  = billingAddressId  || req.body.billingAddress?.id || null;
 
-    if (!items || !items.length || !totalAmount || !shippingId) {
+    if (!items || !items.length || !totalAmount) {
       await transaction.rollback();
       return res.status(400).json({
-        message: "items, totalAmount and shippingAddressId are required",
+        message: "items and totalAmount are required",
       });
     }
 
-    const shippingAddress = await Address.findOne({
-      where: { id: shippingId, userId: req.user.id },
-      transaction,
-    });
-    if (!shippingAddress) {
+    // Guest order requires inline address and email
+    if (isGuest && (!guestEmail || !guestAddress)) {
       await transaction.rollback();
-      return res.status(404).json({ message: "Shipping address not found" });
+      return res.status(400).json({
+        message: "guestEmail and guestAddress are required for guest orders",
+      });
     }
 
+    // Authenticated order requires a saved shippingAddressId
+    if (!isGuest && !shippingId) {
+      await transaction.rollback();
+      return res.status(400).json({
+        message: "shippingAddressId is required",
+      });
+    }
+
+    // Resolve shipping address
+    let shippingAddress = null;
     let billingAddressRef = billingId;
-    if (billingAddressRef) {
-      const billingAddress = await Address.findOne({
-        where: { id: billingAddressRef, userId: req.user.id },
+
+    if (!isGuest) {
+      // Authenticated: load from DB, enforce ownership
+      shippingAddress = await Address.findOne({
+        where: { id: shippingId, userId: req.user.id },
         transaction,
       });
-      if (!billingAddress) {
+      if (!shippingAddress) {
         await transaction.rollback();
-        return res.status(404).json({ message: "Billing address not found" });
+        return res.status(404).json({ message: "Shipping address not found" });
       }
-    } else {
-      billingAddressRef = shippingAddress.id;
+
+      if (billingAddressRef) {
+        const billingAddress = await Address.findOne({
+          where: { id: billingAddressRef, userId: req.user.id },
+          transaction,
+        });
+        if (!billingAddress) {
+          await transaction.rollback();
+          return res.status(404).json({ message: "Billing address not found" });
+        }
+      } else {
+        billingAddressRef = shippingAddress.id;
+      }
     }
+    // Guests: shippingAddress & billingAddress remain null
+    // (address is stored as JSON in order.guestAddress)
 
     // ── STOCK VALIDATION: check BEFORE creating order ────────────────────────
     // This prevents checkout session creation for out-of-stock products.
@@ -551,14 +580,15 @@ const createOrder = async (req, res, next) => {
       resolvedCodAmount   = 0;
     }
 
-    // ── Generate KGF order number ─────────────────────────────────────────────
     // ── Create the order ─────────────────────────────────────────────────────
     const order = await Order.create(
       {
-        userId:            req.user.id,
+        userId:            isGuest ? null : req.user.id,
+        guestEmail:        isGuest ? (guestEmail || null) : null,
+        guestAddress:      isGuest ? JSON.stringify(guestAddress) : null,
         totalAmount:       parseFloat(totalAmount),
-        shippingAddressId: shippingAddress.id,
-        billingAddressId:  billingAddressRef,
+        shippingAddressId: isGuest ? null : (shippingAddress?.id || null),
+        billingAddressId:  isGuest ? null : (billingAddressRef || null),
         paymentMethod:     pm,
         paymentStatus:     isPartialCod ? "partial" : (isCod ? "pending" : "pending"),
         paymentType:       resolvedPaymentType,
@@ -617,7 +647,10 @@ const createOrder = async (req, res, next) => {
       await inventoryService.decrementOrderStock(order.id, transaction, "Order Placement - COD", "cod");
       order.inventoryProcessed = true;
       await order.save({ transaction });
-      await CartItem.destroy({ where: { userId: req.user.id }, transaction });
+      // Only clear cart for authenticated users
+      if (!isGuest) {
+        await CartItem.destroy({ where: { userId: req.user.id }, transaction });
+      }
     }
 
     await transaction.commit();
@@ -633,7 +666,11 @@ const createOrder = async (req, res, next) => {
     // Post-commit for pure COD only
     if (isCod) {
       try {
-        const userRecord = await User.findByPk(req.user.id, { attributes: ["name", "email"] });
+        // Use guest email if no user account
+        const emailAddr = isGuest
+          ? { name: guestAddress?.fullName || "Customer", email: guestEmail }
+          : await User.findByPk(req.user.id, { attributes: ["name", "email"] });
+        const userRecord = isGuest ? emailAddr : emailAddr;
         if (userRecord?.email) {
           await sendOrderConfirmationEmail(createdOrder, { name: userRecord.name, email: userRecord.email });
         }

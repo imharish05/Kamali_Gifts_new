@@ -3,6 +3,7 @@ import cogoToast from "cogo-toast";
 import api from "../../api/axios";
 import { addToCart, addToCartSilent, increaseQuantity, deleteFromCart, decreaseQuantity, deleteAllFromCart } from "../slices/cart-slice";
 import { store } from "../store";
+import { resolveImageAsArray } from "../../helpers/imageUrl";
 
 /** Returns true when user is authenticated */
 const isAuthed = () => !!store.getState().auth?.isAuthenticated;
@@ -22,11 +23,26 @@ const addToCartBaseService = async (dispatchOrProduct, optionalProduct, silent =
 
   // ── Guest path: add directly to Redux (localStorage via redux-persist) ──
   if (!isAuthed()) {
+    const variants = product.Variants || product.variants || [];
+    console.log("[DEBUG GUEST CART] variants found:", variants);
+    console.log("[DEBUG GUEST CART] selectedVariantId:", product.selectedVariantId);
+    const matchedVariant = variants.find(v => String(v.id) === String(product.selectedVariantId)) || product.selectedVariant;
+    console.log("[DEBUG GUEST CART] matchedVariant:", matchedVariant);
+    const resolvedStock = matchedVariant?.stock ?? product.stock ?? 999;
+    const resolvedPrice = matchedVariant ? parseFloat(matchedVariant.salesPrice) : product.price;
+
     const localItem = {
       ...product,
       cartItemId: product.cartItemId || uuidv4(),
       quantity: product.quantity || 1,
+      selectedVariant: matchedVariant || null,
+      price: resolvedPrice,
+      image: matchedVariant?.image
+               ? resolveImageAsArray(matchedVariant.image)
+               : (product.image ? resolveImageAsArray(product.image) : []),
+      stock: resolvedStock,
     };
+    console.log("[DEBUG GUEST CART] localItem image:", localItem.image);
     if (silent) {
       dispatch(addToCartSilent(localItem));
     } else {
@@ -69,7 +85,13 @@ const addToCartBaseService = async (dispatchOrProduct, optionalProduct, silent =
       name: cartItem.productSnapshot?.name || cartItem.product?.name || product.name,
       price: typeof resolvedPrice === "string" ? parseFloat(resolvedPrice) : resolvedPrice,
       discount: typeof resolvedDiscount === "string" ? parseFloat(resolvedDiscount) : resolvedDiscount,
-      image: matchedVariant?.image || cartItem.productSnapshot?.image || cartItem.product?.image || product.image || [],
+      image: matchedVariant?.image
+               ? resolveImageAsArray(matchedVariant.image)
+               : (cartItem.productSnapshot?.image
+                  ? resolveImageAsArray(cartItem.productSnapshot.image)
+                  : (cartItem.product?.image
+                     ? resolveImageAsArray(cartItem.product.image)
+                     : (product.image ? resolveImageAsArray(product.image) : []))),
       variation: cartItem.product?.variation || product.variation || [],
       stock: resolvedStock,
       Variants: variants,

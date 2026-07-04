@@ -18,16 +18,12 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            const wasLoggedIn = !!localStorage.getItem("token");
-            // Clear localStorage AND Redux state so UI reflects logged-out state
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            store.dispatch(logoutAction());
-            // Redirect to login only if user had an active session
-            if (wasLoggedIn && !window.location.pathname.includes("/login")) {
-                window.location.replace(
-                    (process.env.REACT_APP_PUBLIC_URL || "") + "/login"
-                );
+            const requestUrl = error.config?.url || "";
+            // Do NOT clear cart/session on failed login/register credential attempts
+            if (!requestUrl.includes("/auth/login") && !requestUrl.includes("/auth/register")) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                store.dispatch(logoutAction());
             }
         }
         return Promise.reject(error);

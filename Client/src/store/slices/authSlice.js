@@ -29,7 +29,11 @@ const initialState = {
     token: tokenValid ? storedToken : null,
     isAuthenticated: tokenValid,
     loading: false,
-    error: null
+    error: null,
+    // In-memory only — never persisted to localStorage
+    // Holds credentials for auto-login after checkout registration
+    pendingAutoLoginEmail: null,
+    pendingAutoLoginPassword: null,
 };
 
 const authSlice = createSlice({
@@ -78,11 +82,30 @@ const authSlice = createSlice({
             state.user = null;
             state.token = null;
             state.isAuthenticated = false;
+            state.pendingAutoLoginEmail = null;
+            state.pendingAutoLoginPassword = null;
             localStorage.removeItem("token");
             localStorage.removeItem("user");
-        }
+        },
+        // Store pending credentials for auto-login after checkout registration
+        // These are IN-MEMORY ONLY and never written to localStorage
+        storePendingAutoLogin: (state, action) => {
+            state.pendingAutoLoginEmail = action.payload.email;
+            state.pendingAutoLoginPassword = action.payload.password;
+        },
+        clearPendingAutoLogin: (state) => {
+            state.pendingAutoLoginEmail = null;
+            state.pendingAutoLoginPassword = null;
+        },
     }
 });
 
-export const { loginStart, loginSuccess, loginFailure, logoutAction } = authSlice.actions;
-export default authSlice.reducer;
+export const {
+    loginStart,
+    loginSuccess,
+    loginFailure,
+    logoutAction,
+    storePendingAutoLogin,
+    clearPendingAutoLogin,
+} = authSlice.actions;
+export default authSlice.reducer;

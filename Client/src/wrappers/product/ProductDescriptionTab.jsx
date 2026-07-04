@@ -258,7 +258,7 @@ const ProductDescriptionTab = ({
 
                       {submitted ? (
                         <div style={{ padding: "20px 0", color: "#4caf50", fontWeight: 600 }}>
-                          ✅ Thank you! Your review has been submitted and is pending approval.
+                          ✅ Thank you! Your review has been submitted.
                         </div>
                       ) : (
                         <div className="ratting-form">

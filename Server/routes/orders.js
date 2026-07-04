@@ -11,11 +11,15 @@ const {
   updateOrderItemStatus,
 } = require("../controllers/orderController");
 const { protect, adminOnly } = require("../middleware/auth");
+const { optionalAuth } = require("../middleware/optionalAuth");
 
+// ── Customer: create order (supports both authenticated users + guests) ────────
+router.post("/", optionalAuth, createOrder);
+
+// All remaining routes require full authentication
 router.use(protect);
 
 // ── Customer routes ───────────────────────────────────────────────────────────
-router.post("/", createOrder);
 router.get("/",  getMyOrders);
 
 // ── Admin: static named routes MUST come before /:param routes ────────────────

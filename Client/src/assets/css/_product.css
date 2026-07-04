@@ -3800,41 +3800,81 @@ updated
   border-radius: 20px;
 }
 
-/* Arrow buttons */
-.deal-section__arrows {
-  display: flex;
-  gap: 8px;
+/* Arrow buttons wrapper and placement */
+.deal-scroll-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 .deal-arrow {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: none;
-  background: #fff;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #c8826a;
-  transition: background 0.25s, color 0.25s, opacity 0.25s, transform 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  top: 132px;
+  transform: translateY(-50%);
+  z-index: 10;
 }
 
 .deal-arrow svg {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
+  transition: transform 0.2s ease;
+}
+
+.deal-arrow--left {
+  left: -24px;
+}
+
+.deal-arrow--right {
+  right: -24px;
 }
 
 .deal-arrow:hover {
   background: #c8826a;
-  color: #fff;
-  transform: scale(1.08);
+  border-color: #c8826a;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(200, 130, 106, 0.4);
+}
+
+.deal-arrow--left:hover svg {
+  transform: translateX(-2px);
+}
+
+.deal-arrow--right:hover svg {
+  transform: translateX(2px);
 }
 
 .deal-arrow--hidden {
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
+}
+
+@media (max-width: 1199px) {
+  .deal-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .deal-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+  .deal-arrow--left {
+    left: 8px;
+  }
+  .deal-arrow--right {
+    right: 8px;
+  }
 }
 
 /* Scroll track */
@@ -3912,8 +3952,8 @@ updated
   }
   .deal-section__name  { font-size: 17px; }
   .deal-section__emoji { font-size: 18px; }
-  .deal-arrow          { width: 30px; height: 30px; }
-  .deal-arrow svg      { width: 14px; height: 14px; }
+  .deal-arrow          { width: 36px; height: 36px; top: 92px; }
+  .deal-arrow svg      { width: 16px; height: 16px; }
 }
 /* LIST VIEW PREMIUM STYLES */
 .shop-list-wrap-premium {
@@ -4440,41 +4480,81 @@ updated
   border-radius: 20px;
 }
 
-/* Arrow buttons */
-.deal-section__arrows {
-  display: flex;
-  gap: 8px;
+/* Arrow buttons wrapper and placement */
+.deal-scroll-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 .deal-arrow {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: none;
-  background: #fff;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #c8826a;
-  transition: background 0.25s, color 0.25s, opacity 0.25s, transform 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  top: 132px;
+  transform: translateY(-50%);
+  z-index: 10;
 }
 
 .deal-arrow svg {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
+  transition: transform 0.2s ease;
+}
+
+.deal-arrow--left {
+  left: -24px;
+}
+
+.deal-arrow--right {
+  right: -24px;
 }
 
 .deal-arrow:hover {
   background: #c8826a;
-  color: #fff;
-  transform: scale(1.08);
+  border-color: #c8826a;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(200, 130, 106, 0.4);
+}
+
+.deal-arrow--left:hover svg {
+  transform: translateX(-2px);
+}
+
+.deal-arrow--right:hover svg {
+  transform: translateX(2px);
 }
 
 .deal-arrow--hidden {
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
+}
+
+@media (max-width: 1199px) {
+  .deal-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .deal-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+  .deal-arrow--left {
+    left: 8px;
+  }
+  .deal-arrow--right {
+    right: 8px;
+  }
 }
 
 /* Scroll track */
@@ -4552,8 +4632,8 @@ updated
   }
   .deal-section__name  { font-size: 17px; }
   .deal-section__emoji { font-size: 18px; }
-  .deal-arrow          { width: 30px; height: 30px; }
-  .deal-arrow svg      { width: 14px; height: 14px; }
+  .deal-arrow          { width: 36px; height: 36px; top: 92px; }
+  .deal-arrow svg      { width: 16px; height: 16px; }
 }
 
 /* ============================================================

@@ -13,18 +13,21 @@ import LayoutOne from "../../layouts/LayoutOne";
 import Breadcrumb from "../../wrappers/breadcrumb/Breadcrumb";
 
 
-// ── helpers ───────────────────────────────────────────────────────────────────
 const parseJson = (val) => {
   if (!val || typeof val !== "string") return val;
   try { return JSON.parse(val); } catch { return val; }
 };
-const getFirstImage = (img) => {
-  const arr = Array.isArray(img) ? img : parseJson(img);
-  return Array.isArray(arr) ? arr[0] : arr || "";
-};
-const getSecondImage = (img) => {
-  const arr = Array.isArray(img) ? img : parseJson(img);
-  return Array.isArray(arr) && arr.length > 1 ? arr[1] : null;
+
+const deepParse = (val) => {
+  let result = val;
+  for (let i = 0; i < 5; i++) {
+    if (typeof result !== "string") break;
+    let cleanVal = result.replace(/&quot;/g, '"');
+    const next = parseJson(cleanVal);
+    if (next === result || next === cleanVal) break; // no change, stop
+    result = next;
+  }
+  return result;
 };
 
 // Get display price + strike price from item (respects selectedVariant)
@@ -189,11 +192,17 @@ const Wishlist = () => {
                     const hasVariants = Array.isArray(item.Variants) && item.Variants.length > 0;
 
                     // Image: prefer variant image if set, else product image
-                    const variantImg  = item.selectedVariant?.image || null;
-                    const rawImg      = variantImg || getFirstImage(item.image);
-                    const mainImage   = getImgUrl(rawImg);
-                    const hoverRaw    = !variantImg ? getSecondImage(item.image) : null;
-                    const hoverImage  = hoverRaw ? getImgUrl(hoverRaw) : null;
+                    const unwrappedVariant = deepParse(item.selectedVariant?.image);
+                    const rawVariant = Array.isArray(unwrappedVariant) ? unwrappedVariant[0] : (typeof unwrappedVariant === "string" ? unwrappedVariant : null);
+                    
+                    const unwrappedProduct = deepParse(item.image);
+                    const productImages = Array.isArray(unwrappedProduct) ? unwrappedProduct : (typeof unwrappedProduct === "string" ? [unwrappedProduct] : []);
+                    
+                    const rawImg = rawVariant || productImages[0] || null;
+                    const mainImage = rawImg ? getImgUrl(rawImg) : "/assets/img/products/products-1.jpeg";
+                    
+                    const hoverRaw = !rawVariant && productImages.length > 1 ? productImages[1] : null;
+                    const hoverImage = hoverRaw ? getImgUrl(hoverRaw) : null;
 
                     // Variant attribute chips
                     const attrs       = getVariantAttrs(item.selectedVariant);

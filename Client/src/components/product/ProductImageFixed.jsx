@@ -21,7 +21,7 @@ const ProductImageFixed = ({ product }) => {
       <div className="product-fixed-image">
         {product.image ? (
           <img
-            src={getImgUrl(product.image[0])}
+            src={getImgUrl(product.image) || "/assets/img/products/products-1.jpeg"}
             alt=""
             className="img-fluid"
           />

@@ -26,8 +26,9 @@ const deepParse = (val) => {
   let result = val;
   for (let i = 0; i < 5; i++) {
     if (typeof result !== "string") break;
-    const next = parseJson(result);
-    if (next === result) break;
+    let cleanVal = result.replace(/&quot;/g, '"');
+    const next = parseJson(cleanVal);
+    if (next === result || next === cleanVal) break; // no change, stop
     result = next;
   }
   return result;

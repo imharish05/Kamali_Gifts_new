@@ -4,6 +4,7 @@ import { replaceCart } from "../slices/cart-slice";
 import { createCheckoutFromCart } from "../slices/checkout-slice";
 import { store } from "../store";
 import cogoToast from "cogo-toast";
+import { resolveImageAsArray } from "../../helpers/imageUrl";
 
 const getRedirectPath = () => {
   const params = new URLSearchParams(window.location.search);
@@ -35,9 +36,10 @@ const formatServerCartItem = (cartItem) => {
     price: typeof resolvedPrice === 'string' ? parseFloat(resolvedPrice) : resolvedPrice,
     discount: typeof resolvedDiscount === 'string' ? parseFloat(resolvedDiscount) : resolvedDiscount,
     image: matchedVariant?.image
-             ? [matchedVariant.image]
-             : (cartItem.product?.image?.length ? cartItem.product.image
-                : (snap.image?.length ? snap.image : [])),
+             ? resolveImageAsArray(matchedVariant.image)
+             : (cartItem.product?.image
+                ? resolveImageAsArray(cartItem.product.image)
+                : resolveImageAsArray(snap.image)),
     variation: cartItem.product?.variation || [],
     Variants: variants,
     selectedVariant: matchedVariant || null,

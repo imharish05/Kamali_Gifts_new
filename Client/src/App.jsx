@@ -15,6 +15,7 @@ import PaymentPolicy from "./pages/other/PaymentPolicy";
 import { useSelector } from "react-redux";
 import { clearCheckout } from "./store/slices/checkout-slice";
 import { fetchSettings } from "./store/services/settingsService";
+import { resolveImageAsArray } from "./helpers/imageUrl";
 
 // Main home
 const HomeFashion = lazy(() => import("./pages/home/HomeFashion"));
@@ -124,9 +125,10 @@ useEffect(() => {
           price: typeof resolvedPrice === "string" ? parseFloat(resolvedPrice) : resolvedPrice,
           discount: typeof resolvedDiscount === "string" ? parseFloat(resolvedDiscount) : resolvedDiscount,
           image: matched?.image
-                   ? [matched.image]
-                   : (cartItem.product?.image?.length ? cartItem.product.image
-                      : (snap.image?.length ? snap.image : [])),
+                   ? resolveImageAsArray(matched.image)
+                   : (cartItem.product?.image
+                      ? resolveImageAsArray(cartItem.product.image)
+                      : resolveImageAsArray(snap.image)),
           variation: cartItem.product?.variation || [],
           stock: matched?.stock ?? cartItem.product?.stock ?? 999,
           Variants: variants,
@@ -200,8 +202,8 @@ useEffect(() => {
             <Route path={process.env.PUBLIC_URL + "/my-account"} element={<ProtectedRoute><MyAccount /></ProtectedRoute>} />
             <Route path={process.env.PUBLIC_URL + "/cart"} element={<Cart />} />
             <Route path={process.env.PUBLIC_URL + "/wishlist"} element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-            <Route path={process.env.PUBLIC_URL + "/checkout"} element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-            <Route path={process.env.PUBLIC_URL + "/order-confirmation"} element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+            <Route path={process.env.PUBLIC_URL + "/checkout"} element={<Checkout />} />
+            <Route path={process.env.PUBLIC_URL + "/order-confirmation"} element={<OrderConfirmation />} />
             <Route path="/order-details/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
             <Route path="/return-request" element={<ProtectedRoute><ReturnRequest /></ProtectedRoute>} />
             <Route path="/return-tracking/:id" element={<ProtectedRoute><ReturnTracking /></ProtectedRoute>} />

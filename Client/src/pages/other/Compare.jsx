@@ -8,6 +8,7 @@ import SEO from "../../components/seo";
 import LayoutOne from "../../layouts/LayoutOne";
 import Breadcrumb from "../../wrappers/breadcrumb/Breadcrumb";
 import Rating from "../../components/product/sub-components/ProductRating";
+import { getImgUrl } from "../../helpers/imageUrl";
 
 
 
@@ -69,10 +70,7 @@ const Compare = () => {
                                   >
                                     <img
                                       className="img-fluid"
-                                      src={
-                                        process.env.PUBLIC_URL +
-                                        compareItem.image[0]
-                                      }
+                                      src={getImgUrl(compareItem.image) || "/assets/img/products/products-1.jpeg"}
                                       alt=""
                                     />
                                   </Link>

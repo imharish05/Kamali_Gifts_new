@@ -11,7 +11,10 @@ const {
 } = require("../controllers/cartController");
 const { protect } = require("../middleware/auth");
 
-router.use(protect); // all cart routes require auth
+// Public revalidation route (can be called by guests)
+router.post("/revalidate", revalidateCart);
+
+router.use(protect); // remaining cart routes require auth
 
 router.get("/", getCart);
 router.post("/add", addToCart);
@@ -19,6 +22,5 @@ router.delete("/remove/:cartItemId", removeFromCart);
 router.patch("/increase/:cartItemId", increaseQuantity);
 router.patch("/decrease/:cartItemId", decreaseQuantity);
 router.delete("/clear", clearCart);
-router.post("/revalidate", revalidateCart);
 
 module.exports = router;

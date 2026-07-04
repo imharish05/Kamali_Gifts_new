@@ -378,7 +378,7 @@ const createProduct = async (req, res, next) => {
       subCategoryId:   subCategoryId || null,
       brandId:         brandId       || null,
       comboId:         comboId       || null,
-      isPartialCodAvailable: isPartialCodAvailable === "false" || isPartialCodAvailable === false ? false : true,
+      isPartialCodAvailable: isPartialCodAvailable === "true" || isPartialCodAvailable === true,
       customisationFields: customisationFields ? safeParse(customisationFields, null) : null,
       shippingWeight:  shippingWeight ? parseFloat(shippingWeight) : null,
       shippingDimensions: shippingDimensions ? safeParse(shippingDimensions, null) : null,
@@ -486,7 +486,7 @@ const updateProduct = async (req, res, next) => {
       brandId:          brandId          !== undefined ? (brandId || null)           : product.brandId,
       comboId:          comboId          !== undefined ? (comboId || null)           : product.comboId,
       isPartialCodAvailable: isPartialCodAvailable !== undefined
-                          ? (isPartialCodAvailable === "false" || isPartialCodAvailable === false ? false : true)
+                          ? (isPartialCodAvailable === "true" || isPartialCodAvailable === true)
                           : product.isPartialCodAvailable,
       customisationFields: customisationFields !== undefined
                           ? safeParse(customisationFields, null)
