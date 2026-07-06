@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import clsx from "clsx";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import ProductGrid from "./ProductGrid";
 import { getProducts } from "../../helpers/product";
@@ -46,33 +46,62 @@ const TabProduct = ({ spaceTopClass, spaceBottomClass, bgColorClass, category })
 
 const DealSection = ({ section, isLast, category }) => {
   const scrollRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 10);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  };
+  const [page, setPage] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, [section.items]);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const scroll = (dir) => {
+  // Determine items per page based on window width
+  let itemsPerPage = 5;
+  if (windowWidth < 768) {
+    itemsPerPage = 2;
+  } else if (windowWidth < 992) {
+    itemsPerPage = 3;
+  } else if (windowWidth < 1200) {
+    itemsPerPage = 4;
+  } else {
+    itemsPerPage = 5;
+  }
+
+  // Chunk section.items into pages
+  const pages = [];
+  const items = section.items || [];
+  for (let i = 0; i < items.length; i += itemsPerPage) {
+    pages.push(items.slice(i, i + itemsPerPage));
+  }
+  const totalPages = pages.length;
+
+  const scrollToPage = useCallback((idx) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * 280, behavior: "smooth" });
-  };
+    const pageWidth = el.clientWidth;
+    el.scrollTo({ left: idx * pageWidth, behavior: "smooth" });
+  }, []);
+
+  const goToPage = useCallback((idx) => {
+    const target = Math.max(0, Math.min(idx, totalPages - 1));
+    scrollToPage(target);
+    setPage(target);
+  }, [totalPages, scrollToPage]);
+
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollLeft / el.clientWidth);
+    setPage(idx);
+  }, []);
+
+  useEffect(() => {
+    setPage(0);
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollLeft = 0;
+    }
+  }, [section.items, totalPages]);
 
   return (
     <div className={clsx("deal-section", !isLast && "deal-section--divider")}>
@@ -85,8 +114,8 @@ const DealSection = ({ section, isLast, category }) => {
 
       <div className="deal-scroll-wrapper">
         <button
-          className={clsx("deal-arrow deal-arrow--left", !canScrollLeft && "deal-arrow--hidden")}
-          onClick={() => scroll(-1)}
+          className={clsx("deal-arrow deal-arrow--left", page === 0 && "deal-arrow--hidden")}
+          onClick={() => goToPage(page - 1)}
           aria-label="Scroll left"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -94,22 +123,26 @@ const DealSection = ({ section, isLast, category }) => {
           </svg>
         </button>
 
-        <div className="deal-scroll-track" ref={scrollRef}>
-          <div className="deal-scroll-inner">
-            <ProductGrid
-              category={category}
-              type={section.type}
-              sectionType={section.type}
-              limit={10}
-              spaceBottomClass="mb-0"
-              productsList={section.items}
-            />
-          </div>
+        <div className="deal-page-scroll-track" ref={scrollRef} onScroll={onScroll}>
+          {pages.map((pageProds, pIdx) => (
+            <div className="deal-page-scroll-page" key={pIdx}>
+              <div className="deal-page-scroll-grid">
+                <ProductGrid
+                  category={category}
+                  type={section.type}
+                  sectionType={section.type}
+                  limit={itemsPerPage}
+                  spaceBottomClass="mb-0"
+                  productsList={pageProds}
+                />
+              </div>
+            </div>
+          ))}
         </div>
 
         <button
-          className={clsx("deal-arrow deal-arrow--right", !canScrollRight && "deal-arrow--hidden")}
-          onClick={() => scroll(1)}
+          className={clsx("deal-arrow deal-arrow--right", page >= totalPages - 1 && "deal-arrow--hidden")}
+          onClick={() => goToPage(page + 1)}
           aria-label="Scroll right"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

@@ -3955,6 +3955,118 @@ updated
   .deal-arrow          { width: 36px; height: 36px; top: 92px; }
   .deal-arrow svg      { width: 16px; height: 16px; }
 }
+
+/* ── Page-based scroll track for Deals ── */
+.deal-page-scroll-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  width: 100%;
+}
+.deal-page-scroll-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each page in the track */
+.deal-page-scroll-page {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* Grid inside the page */
+.deal-page-scroll-grid {
+  display: flex;
+  justify-content: flex-start;
+  gap: 16px;
+  transition: all 0.3s ease-in-out;
+  padding: 0 10px;
+}
+
+/* Desktop View: 5 items */
+@media (min-width: 1200px) {
+  .deal-page-scroll-grid [class*="col-"] {
+    flex: 0 0 calc(20% - 12.8px) !important; /* (16px * 4) / 5 = 12.8px */
+    width: calc(20% - 12.8px) !important;
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Large screens / Laptop: 4 items */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .deal-page-scroll-grid [class*="col-"] {
+    flex: 0 0 calc(25% - 12px) !important; /* (16px * 3) / 4 = 12px */
+    width: calc(25% - 12px) !important;
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Tablets: 3 items */
+@media (min-width: 768px) and (max-width: 991px) {
+  .deal-page-scroll-grid [class*="col-"] {
+    flex: 0 0 calc(33.33% - 10.67px) !important; /* (16px * 2) / 3 = 10.67px */
+    width: calc(33.33% - 10.67px) !important;
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Mobile: 2 items */
+@media (max-width: 767px) {
+  .deal-page-scroll-grid [class*="col-"] {
+    flex: 0 0 calc(50% - 8px) !important; /* 16px / 2 = 8px */
+    width: calc(50% - 8px) !important;
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 575px) {
+  .deal-page-scroll-grid .product-img-container {
+    aspect-ratio: 1 / 1.1;
+  }
+  .deal-page-scroll-grid .product-badges-left {
+    left: 50% !important;
+    transform: translateX(-50%);
+    top: 8px !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: max-content;
+    max-width: 92%;
+  }
+  .deal-page-scroll-grid .product-badges-left span {
+    font-size: 9px;
+    padding: 3px 7px;
+    white-space: nowrap;
+  }
+  .deal-page-scroll-grid .product-details-premium {
+    padding: 10px 8px 12px;
+  }
+  .deal-page-scroll-grid .product-details-premium h4 {
+    font-size: 12px;
+    margin: 4px 0 6px;
+  }
+  .deal-page-scroll-grid .new-price { font-size: 13px; }
+  .deal-page-scroll-grid .old-price { font-size: 10px; }
+  .deal-page-scroll-grid .cart-action-overlay button {
+    padding: 6px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+}
+
 /* LIST VIEW PREMIUM STYLES */
 .shop-list-wrap-premium {
 
