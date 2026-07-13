@@ -74,15 +74,29 @@ export const cartStore = {
 
     for (const item of guestItems) {
       try {
-        const payload = {
-          productId: item.id,
-          quantity: item.quantity,
-          selectedProductColor: item.selectedProductColor || null,
-          selectedProductSize: item.selectedProductSize || null,
-          selectedVariantId: item.selectedVariantId || null,
-          selectedVariantName: item.selectedVariantName || null,
-        };
-        await api.post("/cart/add", payload);
+        if (item.isCombo) {
+          await api.post("/combos/cart/add", {
+            childComboId: item.childComboId,
+            quantity: item.quantity || 1,
+            selections: item.selectedProducts ? item.selectedProducts.map(sp => ({
+              productId: sp.productId,
+              variantId: sp.variantId,
+              quantity: sp.quantity,
+            })) : undefined,
+            customisationDetails: item.customisationDetails || undefined,
+          });
+        } else {
+          const payload = {
+            productId: item.id,
+            quantity: item.quantity,
+            selectedProductColor: item.selectedProductColor || null,
+            selectedProductSize: item.selectedProductSize || null,
+            selectedVariantId: item.selectedVariantId || null,
+            selectedVariantName: item.selectedVariantName || null,
+            customisationDetails: item.customisationDetails || null,
+          };
+          await api.post("/cart/add", payload);
+        }
       } catch (err) {
         console.warn("Failed to merge guest cart item:", item, err);
       }

@@ -134,6 +134,8 @@ const getAllProducts = async (req, res, next) => {
       where[Op.or] = [
         { name:             { [Op.like]: `%${search}%` } },
         { shortDescription: { [Op.like]: `%${search}%` } },
+        { fullDescription:  { [Op.like]: `%${search}%` } },
+        { '$Variants.variantName$': { [Op.like]: `%${search}%` } },
       ];
     }
     if (minPrice || maxPrice) {
@@ -171,7 +173,12 @@ const getAllProducts = async (req, res, next) => {
     };
     const order = ORDER_MAP[sort] || [["createdAt", "DESC"]];
 
-    const products = await Product.findAll({ where, order, include: PRODUCT_INCLUDE });
+    const products = await Product.findAll({ 
+      where, 
+      order, 
+      include: PRODUCT_INCLUDE,
+      distinct: true
+    });
     const mappedProducts = products.map(shape);
 
     let combosList = [];

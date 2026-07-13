@@ -152,6 +152,10 @@ export const getSortedProducts = (products, sortType, sortValue) => {
         product =>
           searchRegex.test(product.name) ||
           (product.shortDescription && searchRegex.test(product.shortDescription)) ||
+          (product.fullDescription && searchRegex.test(product.fullDescription)) ||
+          (product.description && searchRegex.test(product.description)) ||
+          (product.Variants && product.Variants.some(v => v.variantName && searchRegex.test(v.variantName))) ||
+          (product.variants && product.variants.some(v => v.variantName && searchRegex.test(v.variantName))) ||
           (product.Category?.name && searchRegex.test(product.Category.name)) ||
           (product.Category?.value && searchRegex.test(product.Category.value)) ||
           (product.tag && product.tag.some(t => searchRegex.test(t)))

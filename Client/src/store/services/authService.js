@@ -63,17 +63,30 @@ const mergeGuestCartThenSync = async (dispatch) => {
 
   // Push each guest item to server (errors are silently ignored per item)
   if (guestCartItems.length > 0) {
-    const mergePromises = guestCartItems.map(item =>
-      api.post('/cart/add', {
-        productId: item.id,
-        quantity: item.quantity || 1,
-        selectedProductColor: item.selectedProductColor || null,
-        selectedProductSize: item.selectedProductSize || null,
-        selectedVariantId: item.selectedVariantId || null,
-        selectedVariantName: item.selectedVariantName || null,
-        customisationDetails: item.customisationDetails || null,
-      }).catch(err => console.warn('[CartMerge] Could not merge item:', item.name, err.message))
-    );
+    const mergePromises = guestCartItems.map(item => {
+      if (item.isCombo) {
+        return api.post('/combos/cart/add', {
+          childComboId: item.childComboId,
+          quantity: item.quantity || 1,
+          selections: item.selectedProducts ? item.selectedProducts.map(sp => ({
+            productId: sp.productId,
+            variantId: sp.variantId,
+            quantity: sp.quantity,
+          })) : undefined,
+          customisationDetails: item.customisationDetails || undefined,
+        }).catch(err => console.warn('[CartMerge] Could not merge combo item:', item.name, err.message));
+      } else {
+        return api.post('/cart/add', {
+          productId: item.id,
+          quantity: item.quantity || 1,
+          selectedProductColor: item.selectedProductColor || null,
+          selectedProductSize: item.selectedProductSize || null,
+          selectedVariantId: item.selectedVariantId || null,
+          selectedVariantName: item.selectedVariantName || null,
+          customisationDetails: item.customisationDetails || null,
+        }).catch(err => console.warn('[CartMerge] Could not merge item:', item.name, err.message));
+      }
+    });
     await Promise.all(mergePromises);
   }
 

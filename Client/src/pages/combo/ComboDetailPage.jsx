@@ -3,7 +3,8 @@
 // Fixed combos: show products list + add-to-cart.
 // Mix & Match: product picker grid + selected tray + progress bar.
 
-import React, { Fragment, useState, useEffect, useMemo } from "react";
+import React, { Fragment, useState, useEffect, useMemo, useRef } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { Icon } from "@iconify/react";
 import clsx from "clsx";
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
@@ -208,20 +209,79 @@ const getVariantAttributes = (variant) => {
 };
 
 // ── Fixed combo: included products list
-// Both desktop & mobile: native horizontal scroll, no arrows, equal-height cards
+// Both desktop & mobile: native horizontal scroll, with ref-scrolling arrows, equal-height cards
 function FixedProductsList({ comboProducts }) {
+  const trackRef = useRef(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  const updateArrows = () => {
+    if (trackRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = trackRef.current;
+      setShowLeft(scrollLeft > 5);
+      setShowRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (el) {
+      updateArrows();
+      el.addEventListener("scroll", updateArrows);
+      window.addEventListener("resize", updateArrows);
+      const timer = setTimeout(updateArrows, 500);
+      return () => {
+        el.removeEventListener("scroll", updateArrows);
+        window.removeEventListener("resize", updateArrows);
+        clearTimeout(timer);
+      };
+    }
+  }, [comboProducts]);
+
+  const handleScroll = (dir) => {
+    if (trackRef.current) {
+      const { clientWidth } = trackRef.current;
+      const amount = dir === "left" ? -clientWidth * 0.75 : clientWidth * 0.75;
+      trackRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  };
+
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: "#1A3A6B", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         Included Products
       </div>
 
-      <div className="fpl-scroll-track">
-        {comboProducts.map(cp => (
-          <div key={cp.id} className="fpl-card-wrap">
-            <FixedProductCard cp={cp} />
-          </div>
-        ))}
+      <div style={{ position: "relative" }}>
+        {showLeft && (
+          <button
+            onClick={() => handleScroll("left")}
+            className="fpl-arrow fpl-arrow--left"
+            aria-label="Scroll left"
+            type="button"
+          >
+            <Icon icon="fa-solid:chevron-left" width="12" height="12" />
+          </button>
+        )}
+
+        <div ref={trackRef} className="fpl-scroll-track">
+          {comboProducts.map(cp => (
+            <div key={cp.id} className="fpl-card-wrap">
+              <FixedProductCard cp={cp} />
+            </div>
+          ))}
+        </div>
+
+        {showRight && (
+          <button
+            onClick={() => handleScroll("right")}
+            className="fpl-arrow fpl-arrow--right"
+            aria-label="Scroll right"
+            type="button"
+          >
+            <Icon icon="fa-solid:chevron-right" width="12" height="12" />
+          </button>
+        )}
       </div>
 
       <style>{`
@@ -255,7 +315,136 @@ function FixedProductsList({ comboProducts }) {
         .fpl-card-wrap > div > div:last-child {
           flex: 1;
         }
+        .fpl-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.95);
+          border: 1px solid #E5E7EB;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 5;
+          color: #374151;
+          transition: all 0.2s ease;
+          padding: 0;
+        }
+        .fpl-arrow:hover {
+          background: #fff;
+          color: #F15A24;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.12);
+        }
+        .fpl-arrow--left {
+          left: -10px;
+        }
+        .fpl-arrow--right {
+          right: -10px;
+        }
+        @media (max-width: 767px) {
+          .fpl-arrow {
+            width: 24px;
+            height: 24px;
+          }
+          .fpl-arrow--left {
+            left: -4px;
+          }
+          .fpl-arrow--right {
+            right: -4px;
+          }
+        }
       `}</style>
+    </div>
+  );
+}
+
+// ── Mix & Match combo: eligible products list
+function MixMatchProductsList({ comboProducts, selections, onToggle }) {
+  const trackRef = useRef(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  const updateArrows = () => {
+    if (trackRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = trackRef.current;
+      setShowLeft(scrollLeft > 5);
+      setShowRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (el) {
+      updateArrows();
+      el.addEventListener("scroll", updateArrows);
+      window.addEventListener("resize", updateArrows);
+      const timer = setTimeout(updateArrows, 500);
+      return () => {
+        el.removeEventListener("scroll", updateArrows);
+        window.removeEventListener("resize", updateArrows);
+        clearTimeout(timer);
+      };
+    }
+  }, [comboProducts, selections]);
+
+  const handleScroll = (dir) => {
+    if (trackRef.current) {
+      const { clientWidth } = trackRef.current;
+      const amount = dir === "left" ? -clientWidth * 0.75 : clientWidth * 0.75;
+      trackRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  };
+
+  return (
+    <div style={{ marginBottom: 8, position: "relative" }}>
+      {showLeft && (
+        <button
+          onClick={() => handleScroll("left")}
+          className="fpl-arrow fpl-arrow--left"
+          aria-label="Scroll left"
+          type="button"
+        >
+          <Icon icon="fa-solid:chevron-left" width="12" height="12" />
+        </button>
+      )}
+
+      <div ref={trackRef} className="mm-scroll" style={{
+        display: "flex",
+        gap: 8,
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+        paddingBottom: 6,
+        paddingTop: 2,
+      }}>
+        <style>{`.mm-scroll::-webkit-scrollbar{display:none}`}</style>
+        {comboProducts.map(cp => {
+          const isSel = selections.some(s =>
+            String(s.productId) === String(cp.productId) &&
+            String(s.variantId || "") === String(cp.variantId || "")
+          );
+          return (
+            <div key={cp.id} style={{ flex: "0 0 calc(25% - 6px)", minWidth: 120, maxWidth: 160 }}>
+              <MixMatchCard cp={cp} selected={isSel} onToggle={onToggle} />
+            </div>
+          );
+        })}
+      </div>
+
+      {showRight && (
+        <button
+          onClick={() => handleScroll("right")}
+          className="fpl-arrow fpl-arrow--right"
+          aria-label="Scroll right"
+          type="button"
+        >
+          <Icon icon="fa-solid:chevron-right" width="12" height="12" />
+        </button>
+      )}
     </div>
   );
 }
@@ -558,7 +747,7 @@ const ComboDetailPage = () => {
     return match ? match.quantity : 0;
   }, [cartItems, child]);
 
-  const isInCart = isAuthenticated && comboCartQty > 0;
+  const isInCart = comboCartQty > 0;
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = currentCombo?.name || child?.name || "this combo";
@@ -816,11 +1005,6 @@ const ComboDetailPage = () => {
   const fixedOos = child.type === "fixed" && child.comboProducts?.some(cp => isOutOfStock(cp));
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      cogoToast.warn("Please login to add items to cart", { position: "top-center" });
-      navigate(`/login?redirect=${encodeURIComponent(pathname)}`);
-      return;
-    }
     if (child.type === "mix_match" && !canAdd) {
       cogoToast.warn(`Select at least ${minQty} item${minQty > 1 ? "s" : ""}`, { position: "top-center" });
       return;
@@ -832,12 +1016,19 @@ const ComboDetailPage = () => {
     setAddingCart(true);
     try {
       const cleanedCustomDetails = getCleanedCustomisationDetails();
-      const res = await addComboToCart({
-        childComboId: child.id,
-        quantity: qty,
-        selections: child.type === "mix_match" ? selections : undefined,
-        customisationDetails: Object.keys(cleanedCustomDetails).length > 0 ? cleanedCustomDetails : undefined,
-      });
+      
+      let cartItemId = null;
+      if (isAuthenticated) {
+        const res = await addComboToCart({
+          childComboId: child.id,
+          quantity: qty,
+          selections: child.type === "mix_match" ? selections : undefined,
+          customisationDetails: Object.keys(cleanedCustomDetails).length > 0 ? cleanedCustomDetails : undefined,
+        });
+        cartItemId = res?.cartItem?.id || null;
+      } else {
+        cartItemId = "guest-combo-" + uuidv4();
+      }
 
       if (child.type === "mix_match") dispatch(clearMixMatch(child.id));
 
@@ -876,7 +1067,7 @@ const ComboDetailPage = () => {
       // Dispatch addToCart — same as single products, instant Redux update + "Added To Cart" toast
       dispatch(addToCart({
         id: child.comboProducts?.[0]?.productId || selections?.[0]?.productId || null,
-        cartItemId: res?.cartItem?.id || null,
+        cartItemId,
         quantity: qty,
         name: child.name,
         price: parseFloat(child.comboPrice),
@@ -903,11 +1094,6 @@ const ComboDetailPage = () => {
   };
 
   const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      cogoToast.warn("Please login to buy items", { position: "top-center" });
-      navigate(`/login?redirect=${encodeURIComponent(pathname)}`);
-      return;
-    }
     if (isInCart) {
       navigate("/cart");
       return;
@@ -923,12 +1109,19 @@ const ComboDetailPage = () => {
     setAddingCart(true);
     try {
       const cleanedCustomDetails = getCleanedCustomisationDetails();
-      const res = await addComboToCart({
-        childComboId: child.id,
-        quantity: qty,
-        selections: child.type === "mix_match" ? selections : undefined,
-        customisationDetails: Object.keys(cleanedCustomDetails).length > 0 ? cleanedCustomDetails : undefined,
-      });
+      
+      let cartItemId = null;
+      if (isAuthenticated) {
+        const res = await addComboToCart({
+          childComboId: child.id,
+          quantity: qty,
+          selections: child.type === "mix_match" ? selections : undefined,
+          customisationDetails: Object.keys(cleanedCustomDetails).length > 0 ? cleanedCustomDetails : undefined,
+        });
+        cartItemId = res?.cartItem?.id || null;
+      } else {
+        cartItemId = "guest-combo-" + uuidv4();
+      }
 
       if (child.type === "mix_match") dispatch(clearMixMatch(child.id));
 
@@ -963,7 +1156,7 @@ const ComboDetailPage = () => {
 
       dispatch(addToCartSilent({
         id: child.comboProducts?.[0]?.productId || selections?.[0]?.productId || null,
-        cartItemId: res?.cartItem?.id || null,
+        cartItemId,
         quantity: qty,
         name: child.name,
         price: parseFloat(child.comboPrice),
@@ -1123,33 +1316,13 @@ const ComboDetailPage = () => {
                         )}
                       </div>
 
-                      {/* Eligible products — horizontal scroll, no slider */}
+                      {/* Eligible products — horizontal scroll, with ref-scrolling arrows */}
                       {child.comboProducts && child.comboProducts.some(cp => cp.isEligible) && (
-                        <div style={{ marginBottom: 8 }}>
-                          <div className="mm-scroll" style={{
-                            display: "flex",
-                            gap: 8,
-                            overflowX: "auto",
-                            WebkitOverflowScrolling: "touch",
-                            scrollbarWidth: "none",
-                            paddingBottom: 6,
-                            paddingTop: 2,
-                          }}>
-                            <style>{`.mm-scroll::-webkit-scrollbar{display:none}`}</style>
-                            {child.comboProducts.filter(cp => cp.isEligible).map(cp => {
-                              const isSel = selections.some(s =>
-                                String(s.productId) === String(cp.productId) &&
-                                String(s.variantId || "") === String(cp.variantId || "")
-                              );
-                              return (
-                                <div key={cp.id} style={{ flex: "0 0 calc(25% - 6px)", minWidth: 120, maxWidth: 160 }}>
-                                  <MixMatchCard cp={cp} selected={isSel}
-                                    onToggle={(cp, vId) => handleToggle(cp, vId)} />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                        <MixMatchProductsList
+                          comboProducts={child.comboProducts.filter(cp => cp.isEligible)}
+                          selections={selections}
+                          onToggle={handleToggle}
+                        />
                       )}
                     </>
                   )}
@@ -1402,7 +1575,7 @@ const ComboDetailPage = () => {
                         <>
                           <Link to={process.env.PUBLIC_URL + "/cart"} className="pdp-btn pdp-btn--success pdp-info__combo-cell pdp-info__combo-cell--primary" style={{ flex: 1 }}>
                             View Cart
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 6 }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: "16px", height: "16px", minWidth: "16px", minHeight: "16px", marginLeft: 6, display: "inline-block", verticalAlign: "middle" }}>
                               <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                             </svg>
                           </Link>
@@ -1411,7 +1584,7 @@ const ComboDetailPage = () => {
                             onClick={handleBuyNow}
                             style={{ flex: 1 }}
                           >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "18px", height: "18px", minWidth: "18px", minHeight: "18px", marginRight: 8, display: "inline-block", verticalAlign: "middle" }}>
                               <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                             Buy Now
@@ -1431,7 +1604,7 @@ const ComboDetailPage = () => {
                               `Add ${minQty - totalSel} more to unlock`
                             ) : (
                               <>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8 }}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "22px", height: "22px", minWidth: "22px", minHeight: "22px", marginRight: 8, display: "inline-block", verticalAlign: "middle" }}>
                                   <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                                   <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                                 </svg>
@@ -1445,7 +1618,7 @@ const ComboDetailPage = () => {
                             disabled={addingCart || (child.type === "mix_match" && !canAdd)}
                             style={{ flex: 1 }}
                           >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "18px", height: "18px", minWidth: "18px", minHeight: "18px", marginRight: 8, display: "inline-block", verticalAlign: "middle" }}>
                               <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                             Buy Now
