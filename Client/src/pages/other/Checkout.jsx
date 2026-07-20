@@ -1025,7 +1025,7 @@ const Checkout = () => {
         order_id: rzpOrderId,
         amount: Math.round(deliveryCharge * 100),
         currency: "INR",
-        name: "Kamali Gifts",
+        name: "Kamali Gifts Factory",
         description: `Delivery charge for Order ${dbOrderId}`,
         customer_notify: 1,
         prefill: {
@@ -1132,7 +1132,7 @@ const Checkout = () => {
         order_id: rzpOrderId,
         amount: Math.round(orderPayload.totalAmount * 100),
         currency: "INR",
-        name: "Kamali Gifts",
+        name: "Kamali Gifts Factory",
         description: "Order Payment",
         customer_notify: 1,
         prefill: {
@@ -1263,7 +1263,7 @@ const Checkout = () => {
         </div>
       )}
       <SEO
-        titleTemplate="Checkout — Kamali Gifts"
+        titleTemplate="Checkout — Kamali Gifts Factory"
         description="Complete your purchase securely."
       />
       <LayoutOne headerTop="visible">
@@ -2199,6 +2199,41 @@ const Checkout = () => {
                       ℹ️ ₹{(shippingPricing.grandTotal - (shippingInfo?.shippingCharge || 0)).toFixed(2)} will be collected on delivery
                     </div>
                   )}
+
+                  <div 
+                    style={{
+                      background: "#e8f5e9",
+                      border: "1px dashed #4caf50",
+                      borderRadius: "10px",
+                      padding: "12px",
+                      marginBottom: "16px",
+                      fontSize: "13px",
+                      color: "#2e7d32",
+                      textAlign: "center",
+                      fontWeight: "500",
+                      lineHeight: "1.5",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      transition: "all 0.2s ease-in-out"
+                    }}
+                    onClick={() => window.open(`https://wa.me/917338814319?text=${encodeURIComponent("Hello Kamali Gifts Factory, here is a screenshot of my cart. Can you please check for the lowest possible shipping rate?")}`, "_blank")}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#c8e6c9";
+                      e.currentTarget.style.transform = "scale(1.02)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#e8f5e9";
+                      e.currentTarget.style.transform = "none";
+                    }}
+                  >
+                    <i className="fa fa-whatsapp" style={{ fontSize: "16px", color: "#4caf50" }}></i>
+                    <span>
+                      Seeing high delivery charges? WhatsApp us a screenshot of your cart for the lowest possible shipping rate.
+                    </span>
+                  </div>
 
                   <button
                     className="kco-place-order-btn"

@@ -99,11 +99,11 @@ const ProductGridListSingle = ({
                   <div className="premium-price">
                     {finalStrike ? (
                       <>
-                        <span className="new-price">₹{finalPrice}</span>
-                        <span className="old-price">₹{finalStrike}</span>
+                        <span className="new-price"><span className="rupee-font">₹</span>{finalPrice}</span>
+                        <span className="old-price"><span className="rupee-font">₹</span>{finalStrike}</span>
                       </>
                     ) : (
-                      <span className="new-price">₹{finalPrice}</span>
+                      <span className="new-price"><span className="rupee-font">₹</span>{finalPrice}</span>
                     )}
                   </div>
                   {product.rating > 0 && <Rating ratingValue={product.rating} />}
@@ -207,11 +207,11 @@ const ProductGridListSingle = ({
               <div className="premium-price">
                 {finalStrike ? (
                   <>
-                    <span className="new-price">₹{finalPrice}</span>
-                    <span className="old-price">₹{finalStrike}</span>
+                    <span className="new-price"><span className="rupee-font">₹</span>{finalPrice}</span>
+                    <span className="old-price"><span className="rupee-font">₹</span>{finalStrike}</span>
                   </>
                 ) : (
-                  <span className="new-price">₹{finalPrice}</span>
+                  <span className="new-price"><span className="rupee-font">₹</span>{finalPrice}</span>
                 )}
               </div>
               {product.rating > 0 && (

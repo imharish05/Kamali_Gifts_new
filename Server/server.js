@@ -136,7 +136,7 @@ app.use("/api/inventory-settings", inventorySettingsRoutes);
 app.use("/api/fonts",             fontRoutes);
 
 app.get("/api/health", (req, res) =>
-  res.json({ status: "ok", service: "Kamali Gifts API", db: "MySQL" })
+  res.json({ status: "ok", service: "Kamali Gifts Factory API", db: "MySQL" })
 );
 
 app.use("/api", categoryRoutes);

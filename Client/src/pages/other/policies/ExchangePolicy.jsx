@@ -21,8 +21,8 @@ const ExchangePolicy = () => {
   return (
     <Fragment>
       <SEO
-        titleTemplate="Exchange & Return Policy – Kamali Gifts"
-        description="Kamali Gifts exchange and return policy for customized gifts, toys, and stationery. Learn about eligibility, return windows, refund timelines via Razorpay, and how to initiate a return."
+        titleTemplate="Exchange & Return Policy – Kamali Gifts Factory"
+        description="Kamali Gifts Factory exchange and return policy for customized gifts, toys, and stationery. Learn about eligibility, return windows, refund timelines via Razorpay, and how to initiate a return."
       />
       <LayoutOne headerTop="visible">
         <Breadcrumb

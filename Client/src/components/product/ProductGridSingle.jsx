@@ -203,11 +203,11 @@ const ProductGridSingle = ({
             <div className="premium-price">
               {discountedPrice !== null ? (
                 <>
-                  <span className="new-price">₹{finalDiscountedPrice}</span>
-                  <span className="old-price">₹{finalProductPrice}</span>
+                  <span className="new-price"><span className="rupee-font">₹</span>{finalDiscountedPrice}</span>
+                  <span className="old-price"><span className="rupee-font">₹</span>{finalProductPrice}</span>
                 </>
               ) : (
-                <span className="new-price">₹{finalProductPrice}</span>
+                <span className="new-price"><span className="rupee-font">₹</span>{finalProductPrice}</span>
               )}
             </div>
           </div>

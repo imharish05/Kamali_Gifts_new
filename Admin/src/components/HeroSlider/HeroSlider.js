@@ -26,8 +26,8 @@ const countWords = (text) => text.trim().split(/\s+/).filter(Boolean).length;
 
 // Helper: Get word/char limits
 const LIMITS = {
-  title: { chars: 50, words: 8 },
-  subtitle: { chars: 60, words: 10 },
+  title: { chars: 65, words: 12 },
+  subtitle: { chars: 75, words: 15 },
 };
 
 // Banner Image Dimension Validator

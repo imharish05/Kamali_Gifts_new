@@ -112,6 +112,9 @@
 .ig-icon {
   fill: #bc1888; /* Fallback, SVG uses the gradient def */
 }
+.yt-icon {
+  fill: #FF0000;
+}
 .x-icon {
   fill: var(--x-black);
 }

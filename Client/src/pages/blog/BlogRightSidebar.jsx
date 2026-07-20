@@ -13,8 +13,8 @@ const BlogRightSidebar = () => {
   return (
     <Fragment>
       <SEO
-        titleTemplate="Blog - Kamali Gifts"
-        description="Read gift ideas, personalization tips, and inspiration from the Kamali Gifts blog. Your guide to meaningful gifting."
+        titleTemplate="Blog - Kamali Gifts Factory"
+        description="Read gift ideas, personalization tips, and inspiration from the Kamali Gifts Factory blog. Your guide to meaningful gifting."
       />
       <LayoutOne headerTop="visible">
         {/* breadcrumb */}

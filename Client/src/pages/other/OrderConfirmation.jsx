@@ -106,7 +106,7 @@ const generateReceiptText = (state) => {
   const grandTotal = subtotal - discount + shipping;
 
   const lines = [
-    "=== KAMALI GIFTS — ORDER RECEIPT ===",
+    "=== Kamali Gifts Factory — ORDER RECEIPT ===",
     `Order ID   : ${referenceSlug || orderId}`,
     `Date       : ${new Date().toLocaleDateString("en-IN")}`,
     "",
@@ -137,7 +137,7 @@ const generateReceiptText = (state) => {
     `${selectedAddr.city}, ${selectedAddr.state} — ${selectedAddr.pincode}`,
     selectedAddr.phone,
     "",
-    "Thank you for shopping with Kamali Gifts! 💝",
+    "Thank you for shopping with Kamali Gifts Factory! 💝",
   ].filter(l => l !== null).join("\n");
 
   return lines;
@@ -256,7 +256,7 @@ const OrderConfirmation = () => {
           }
         }
       `}</style>
-      <SEO titleTemplate="Order Confirmed — Kamali Gifts" description="Your order has been placed successfully." />
+      <SEO titleTemplate="Order Confirmed — Kamali Gifts Factory" description="Your order has been placed successfully." />
       <LayoutOne headerTop="visible">
         <div className="container" style={{ padding: "30px 15px" }}>
 

@@ -23,8 +23,8 @@ const PrivacyPolicy = () => {
   return (
     <Fragment>
       <SEO
-        titleTemplate="Privacy Policy – Kamali Gifts"
-        description="Learn how Kamali Gifts collects, uses, and protects your personal information when you shop for customized gifts, toys, and stationery."
+        titleTemplate="Privacy Policy – Kamali Gifts Factory"
+        description="Learn how Kamali Gifts Factory collects, uses, and protects your personal information when you shop for customized gifts, toys, and stationery."
       />
       <LayoutOne headerTop="visible">
         <Breadcrumb

@@ -44,7 +44,12 @@ const BlogPosts = () => {
                 <div className="share-social">
                   <ul>
                     <li>
-                      <a className="facebook" href="//facebook.com">
+                      <a
+                        className="facebook"
+                        href="https://www.facebook.com/share/1F6BNcFs9L/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <i className="fa fa-facebook" />
                       </a>
                     </li>
@@ -61,6 +66,26 @@ const BlogPosts = () => {
                         rel="noopener noreferrer"
                       >
                         <i className="fa fa-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="youtube"
+                        href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-youtube-play" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="whatsapp"
+                        href="https://wa.me/7338814319"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-whatsapp" />
                       </a>
                     </li>
                   </ul>
@@ -111,7 +136,12 @@ const BlogPosts = () => {
                 <div className="share-social">
                   <ul>
                     <li>
-                      <a className="facebook" href="//facebook.com">
+                      <a
+                        className="facebook"
+                        href="https://www.facebook.com/share/1F6BNcFs9L/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <i className="fa fa-facebook" />
                       </a>
                     </li>
@@ -128,6 +158,26 @@ const BlogPosts = () => {
                         rel="noopener noreferrer"
                       >
                         <i className="fa fa-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="youtube"
+                        href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-youtube-play" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="whatsapp"
+                        href="https://wa.me/7338814319"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-whatsapp" />
                       </a>
                     </li>
                   </ul>
@@ -178,7 +228,12 @@ const BlogPosts = () => {
                 <div className="share-social">
                   <ul>
                     <li>
-                      <a className="facebook" href="//facebook.com">
+                      <a
+                        className="facebook"
+                        href="https://www.facebook.com/share/1F6BNcFs9L/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <i className="fa fa-facebook" />
                       </a>
                     </li>
@@ -195,6 +250,26 @@ const BlogPosts = () => {
                         rel="noopener noreferrer"
                       >
                         <i className="fa fa-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="youtube"
+                        href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-youtube-play" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="whatsapp"
+                        href="https://wa.me/7338814319"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-whatsapp" />
                       </a>
                     </li>
                   </ul>
@@ -245,7 +320,12 @@ const BlogPosts = () => {
                 <div className="share-social">
                   <ul>
                     <li>
-                      <a className="facebook" href="//facebook.com">
+                      <a
+                        className="facebook"
+                        href="https://www.facebook.com/share/1F6BNcFs9L/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <i className="fa fa-facebook" />
                       </a>
                     </li>
@@ -262,6 +342,26 @@ const BlogPosts = () => {
                         rel="noopener noreferrer"
                       >
                         <i className="fa fa-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="youtube"
+                        href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-youtube-play" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="whatsapp"
+                        href="https://wa.me/7338814319"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-whatsapp" />
                       </a>
                     </li>
                   </ul>
@@ -312,7 +412,12 @@ const BlogPosts = () => {
                 <div className="share-social">
                   <ul>
                     <li>
-                      <a className="facebook" href="//facebook.com">
+                      <a
+                        className="facebook"
+                        href="https://www.facebook.com/share/1F6BNcFs9L/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <i className="fa fa-facebook" />
                       </a>
                     </li>
@@ -329,6 +434,26 @@ const BlogPosts = () => {
                         rel="noopener noreferrer"
                       >
                         <i className="fa fa-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="youtube"
+                        href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-youtube-play" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="whatsapp"
+                        href="https://wa.me/7338814319"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-whatsapp" />
                       </a>
                     </li>
                   </ul>
@@ -379,7 +504,12 @@ const BlogPosts = () => {
                 <div className="share-social">
                   <ul>
                     <li>
-                      <a className="facebook" href="//facebook.com">
+                      <a
+                        className="facebook"
+                        href="https://www.facebook.com/share/1F6BNcFs9L/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <i className="fa fa-facebook" />
                       </a>
                     </li>
@@ -396,6 +526,26 @@ const BlogPosts = () => {
                         rel="noopener noreferrer"
                       >
                         <i className="fa fa-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="youtube"
+                        href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-youtube-play" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        className="whatsapp"
+                        href="https://wa.me/7338814319"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <i className="fa fa-whatsapp" />
                       </a>
                     </li>
                   </ul>

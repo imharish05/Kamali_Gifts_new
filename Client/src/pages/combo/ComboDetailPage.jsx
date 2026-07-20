@@ -751,7 +751,7 @@ const ComboDetailPage = () => {
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = currentCombo?.name || child?.name || "this combo";
-  const shareMessage = `Check out ${shareTitle} on Kamali Gifts — a perfect choice for your next celebration.`;
+  const shareMessage = `Check out ${shareTitle} on Kamali Gifts Factory — a perfect choice for your next celebration.`;
   const shareText = `${shareMessage}\n${shareUrl}`;
   const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareMessage)}`;
   const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
@@ -1208,7 +1208,7 @@ const ComboDetailPage = () => {
     <Fragment>
       <SEO
         title={`${child.name} — ${currentCombo.name}`}
-        titleTemplate="Customized Combo Gift Sets - Kamali Gifts"
+        titleTemplate="Customized Combo Gift Sets - Kamali Gifts Factory"
         description={comboShortDescription || `${child.name} combo gift set — ₹${comboPrice}. Personalized bundle with laser engraving and customization options.`}
         keywords="combo gift set, customized combo, personalized bundle, gift bundle, bulk combo gifts, corporate combo gifts, wedding combo gifts"
       />

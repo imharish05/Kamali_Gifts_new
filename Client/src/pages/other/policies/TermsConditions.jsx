@@ -25,8 +25,8 @@ const TermsConditions = () => {
   return (
     <Fragment>
       <SEO
-        titleTemplate="Terms & Conditions – Kamali Gifts"
-        description="Read the Terms and Conditions for shopping at Kamali Gifts — customized gifts, toys, and stationery."
+        titleTemplate="Terms & Conditions – Kamali Gifts Factory"
+        description="Read the Terms and Conditions for shopping at Kamali Gifts Factory — customized gifts, toys, and stationery."
       />
       <LayoutOne headerTop="visible">
         <Breadcrumb

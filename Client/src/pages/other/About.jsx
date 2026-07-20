@@ -17,10 +17,10 @@ const About = () => {
   return (
     <Fragment>
       <SEO
-        title="About Kamali Gifts"
+        title="About Kamali Gifts Factory"
         titleTemplate="Personalized & Customized Gifts Factory"
-        description="Learn about Kamali Gifts - a complete gift solution hub offering personalized and customized return gifts, corporate gifts, and bulk gifts. Established to deliver creativity, quality, and affordability across Chennai and India."
-        keywords="about kamali gifts, customized gifts factory, return gifts manufacturer, corporate gifts supplier, personalized gifts company, laser engraving services, bulk gifts Chennai"
+        description="Learn about Kamali Gifts Factory - a complete gift solution hub offering personalized and customized return gifts, corporate gifts, and bulk gifts. Established to deliver creativity, quality, and affordability across Chennai and India."
+        keywords="about Kamali Gifts Factory, customized gifts factory, return gifts manufacturer, corporate gifts supplier, personalized gifts company, laser engraving services, bulk gifts Chennai"
       /> 
       <LayoutOne headerTop="visible">
         {/* breadcrumb */}

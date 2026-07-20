@@ -18,7 +18,7 @@ const MobileMenu = () => {
             className="offcanvas-header__brand"
             onClick={closeMobileMenu}
           >
-            Kamali Gifts
+            Kamali Gifts Factory
           </Link>
           <button
             className="offcanvas-menu-close"

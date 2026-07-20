@@ -22,8 +22,14 @@ const MobileWidgets = () => {
         <a href="https://www.instagram.com/kamaligiftsfactory?utm_source=qr&igsh=MThqdmp6ODBlazdkdw==" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
           <i className="fa fa-instagram"></i>
         </a>
-        <a href="https://www.facebook.com/share/1F6BNcFs9L/" title="Facebook" aria-label="Facebook">
+        <a href="https://www.facebook.com/share/1F6BNcFs9L/" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
           <i className="fa fa-facebook"></i>
+        </a>
+        <a href="https://youtube.com/@kamaligiftsfactory?si=56Nqqvc1ArKRwta7" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+          <i className="fa fa-youtube-play"></i>
+        </a>
+        <a href="https://wa.me/7338814319" title="WhatsApp" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer">
+          <i className="fa fa-whatsapp"></i>
         </a>
       </div>
     </div>

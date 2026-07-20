@@ -296,7 +296,7 @@ async function suite5_CodOrderDeductsImmediately() {
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   console.log("═══════════════════════════════════════════════════════════════");
-  console.log("  Kamali Gifts — Inventory & Payment Verification Suite");
+  console.log("  Kamali Gifts Factory — Inventory & Payment Verification Suite");
   console.log(`  API: ${BASE_URL}`);
   console.log("═══════════════════════════════════════════════════════════════");
 

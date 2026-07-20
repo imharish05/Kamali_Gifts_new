@@ -23,8 +23,8 @@ const Compare = () => {
   return (
     <Fragment>
       <SEO
-        titleTemplate="Compare - Kamali Gifts"
-        description="Compare your favorite gifts and find the perfect personalized gift at Kamali Gifts."
+        titleTemplate="Compare - Kamali Gifts Factory"
+        description="Compare your favorite gifts and find the perfect personalized gift at Kamali Gifts Factory."
       />
       <LayoutOne headerTop="visible">
         {/* breadcrumb */}

@@ -84,11 +84,11 @@ const ComboCard = ({ combo, spaceBottomClass }) => {
           <div className="premium-price">
             {hasSavings ? (
               <>
-                <span className="new-price">₹{comboPrice.toLocaleString("en-IN")}</span>
-                <span className="old-price">₹{originalPrice.toLocaleString("en-IN")}</span>
+                <span className="new-price"><span className="rupee-font">₹</span>{comboPrice.toLocaleString("en-IN")}</span>
+                <span className="old-price"><span className="rupee-font">₹</span>{originalPrice.toLocaleString("en-IN")}</span>
               </>
             ) : (
-              <span className="new-price">₹{comboPrice.toLocaleString("en-IN")}</span>
+              <span className="new-price"><span className="rupee-font">₹</span>{comboPrice.toLocaleString("en-IN")}</span>
             )}
           </div>
         </div>

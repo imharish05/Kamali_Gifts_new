@@ -377,12 +377,12 @@ function ComboProductsSection({ combo, allProducts }) {
         <div className="pdp-combo__price">
           {discounted ? (
             <>
-              <span className="pdp-combo__price-old">₹{parseFloat(combo.price).toLocaleString("en-IN")}</span>
-              <span className="pdp-combo__price-new">₹{parseFloat(combo.discountedPrice).toLocaleString("en-IN")}</span>
+              <span className="pdp-combo__price-old"><span className="rupee-font">₹</span>{parseFloat(combo.price).toLocaleString("en-IN")}</span>
+              <span className="pdp-combo__price-new"><span className="rupee-font">₹</span>{parseFloat(combo.discountedPrice).toLocaleString("en-IN")}</span>
               {saving > 0 && <span className="pdp-combo__saving">{saving}% OFF</span>}
             </>
           ) : (
-            <span className="pdp-combo__price-new">₹{parseFloat(combo.price).toLocaleString("en-IN")}</span>
+            <span className="pdp-combo__price-new"><span className="rupee-font">₹</span>{parseFloat(combo.price).toLocaleString("en-IN")}</span>
           )}
         </div>
       </div>
@@ -401,7 +401,7 @@ function ComboProductsSection({ combo, allProducts }) {
                 ) : <span>🎁</span>}
               </div>
               <div className="pdp-combo__item-name">{p.name}</div>
-              {price > 0 && <div className="pdp-combo__item-price">₹{price.toLocaleString("en-IN")}</div>}
+              {price > 0 && <div className="pdp-combo__item-price"><span className="rupee-font">₹</span>{price.toLocaleString("en-IN")}</div>}
             </Link>
           );
         })}
@@ -433,7 +433,7 @@ const ProductDescriptionInfo = ({
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = localProduct?.name || product?.name || "this product";
-  const shareMessage = `Check out ${shareTitle} on Kamali Gifts — a perfect pick for every special moment.`;
+  const shareMessage = `Check out ${shareTitle} on Kamali Gifts Factory — a perfect pick for every special moment.`;
   const shareText = `${shareMessage}\n${shareUrl}`;
   const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareMessage)}`;
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
@@ -472,7 +472,7 @@ const ProductDescriptionInfo = ({
     };
   }, [product.id, localProduct]);
 
-  const currencySymbol = "₹";
+  const currencySymbol = <span className="rupee-font">₹</span>;
   const hasNewVar = hasBackendVariants(localProduct);
   const hasOldVar = !hasNewVar && hasOldVariation(localProduct);
 

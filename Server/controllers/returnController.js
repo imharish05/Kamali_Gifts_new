@@ -650,7 +650,7 @@ const approveReplacement = async (req, res, next) => {
           discount:      0,
           tax:           0,
         }],
-        payment_method: "Prepaid", // Kamali Gifts pays
+        payment_method: "Prepaid", // Kamali Gifts Factory pays
         sub_total:      subTotal,
         length:         10,
         breadth:        10,
@@ -853,7 +853,7 @@ const createReversePickup = async (req, res, next) => {
       pickup_state:         address.state   || "",
       pickup_pincode:       String(address.pincode || ""),
       pickup_country:       "India",
-      shipping_customer_name: "Kamali Gifts",
+      shipping_customer_name: "Kamali Gifts Factory",
       shipping_address:     whAddress || "",
       shipping_city:        whCity || "",
       shipping_pincode:     String(whPincode || ""),

@@ -310,6 +310,22 @@
   color: #c32aa3;
   background-color: transparent;
 }
+.blog-wrap-2 .blog-content-2 .blog-share-comment .blog-share .share-social ul li a.youtube {
+  border: 1px solid #ff0000;
+  background-color: #ff0000;
+}
+.blog-wrap-2 .blog-content-2 .blog-share-comment .blog-share .share-social ul li a.youtube:hover {
+  color: #ff0000;
+  background-color: transparent;
+}
+.blog-wrap-2 .blog-content-2 .blog-share-comment .blog-share .share-social ul li a.whatsapp {
+  border: 1px solid #25d366;
+  background-color: #25d366;
+}
+.blog-wrap-2 .blog-content-2 .blog-share-comment .blog-share .share-social ul li a.whatsapp:hover {
+  color: #25d366;
+  background-color: transparent;
+}
 .blog-wrap-2:hover .blog-img-2 img {
   transform: scale(1.1);
 }

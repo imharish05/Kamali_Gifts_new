@@ -37,6 +37,17 @@ const SEO = ({
                 {/* Additional SEO */}
                 <meta name="robots" content="index, follow" />
                 <meta name="language" content="en" />
+
+                {/* Structured Data for Site Name */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebSite",
+                        "name": "Kamali Gifts Factory",
+                        "alternateName": ["Kamali Gifts", "Kamali Gifts Factory Chennai"],
+                        "url": "https://kamaligiftsfactory.com/"
+                    })}
+                </script>
             </Helmet>
         </HelmetProvider>
     );
@@ -54,7 +65,7 @@ SEO.propTypes = {
 }
 
 SEO.defaultProps = {
-    title: "Kamali Gifts",
+    title: "Kamali Gifts Factory",
     titleTemplate: "Personalized Return Gifts & Corporate Gifts Crafted for Every Occasion",
     description: "Kamali Gifts Factory offers customized corporate gifts and return gifts for weddings, engagements, baby showers, birthdays, housewarming ceremonies, puberty ceremonies, upanayanam, festivals, Navaratri, Varalakshmi Pooja, corporate events, school functions, retirement functions and special occasions.",
     keywords: "Return gifts, customized gifts, personalized gifts, corporate gifts, wedding return gifts, bulk return gifts, custom gifts Chennai, personalized corporate gifts, laser engraving, laser etching",
