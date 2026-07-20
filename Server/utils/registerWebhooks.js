@@ -1,5 +1,14 @@
 const axios = require('axios');
-const { shiprocketPost, shiprocketGet } = require('./shiprocket');
+const { shiprocketPost, shiprocketGet, getToken } = require('./shiprocket');
+
+async function verifyShiprocketConnection() {
+  try {
+    await getToken();
+    console.log('[Shiprocket] Shiprocket integration verified successfully ✓');
+  } catch (err) {
+    console.error('[Shiprocket] Integration connection failed: Check SHIPROCKET_EMAIL or SHIPROCKET_PWD in .env');
+  }
+}
 
 async function registerShiprocketWebhook() {
   const appUrl = process.env.APP_URL;
@@ -68,6 +77,7 @@ async function registerRazorpayWebhook() {
 }
 
 async function registerWebhooks() {
+  await verifyShiprocketConnection();
   if (process.env.NODE_ENV !== 'production') {
     console.log('[Webhook] Non-production env — skipping webhook registration');
     return;

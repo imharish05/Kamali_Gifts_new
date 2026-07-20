@@ -56,33 +56,47 @@ const allowedOrigins = [
   "http://127.0.0.1:3001",
 ].filter(Boolean); // removes undefined entries if env vars are not set
 
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       // Allow requests with no origin (mobile apps, Postman, curl, server-to-server)
-//       if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, curl, server-to-server)
+      if (!origin) return callback(null, true);
 
-//       if (process.env.NODE_ENV !== "production") {
-//         // Development: allow everything for easy local testing
-//         return callback(null, true);
-//       }
+      if (process.env.NODE_ENV !== "production") {
+        // Development: allow everything for easy local testing
+        return callback(null, true);
+      }
 
-//       // Production: only allow listed origins
-//       if (allowedOrigins.includes(origin)) {
-//         return callback(null, true);
-//       }
+      // Helper function to check if the origin is a valid subdomain or main domain of allowed targets
+      const isAllowedDomain = (orig) => {
+        try {
+          const parsed = new URL(orig);
+          const hostname = parsed.hostname;
+          const allowedDomains = ["kamaligiftsfactory.com", "saitechnosolutions.co.in"];
+          
+          return allowedOrigins.includes(orig) || 
+                 allowedDomains.some(domain => hostname === domain || hostname.endsWith("." + domain));
+        } catch (e) {
+          return false;
+        }
+      };
 
-//       console.warn(`[CORS] Blocked request from origin: ${origin}`);
-//       return callback(new Error(`CORS policy: origin '${origin}' is not allowed`));
-//     },
-//     credentials: true,                   // Allow cookies / Authorization headers
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     optionsSuccessStatus: 200,           // For legacy browser compatibility
-//   })
-// );
+      // Production: check allowed origins and subdomains
+      if (isAllowedDomain(origin)) {
+        return callback(null, true);
+      }
 
-app.use(cors())
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
+      return callback(new Error(`CORS policy: origin '${origin}' is not allowed`));
+    },
+    credentials: true,                   // Allow cookies / Authorization headers
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 200,           // For legacy browser compatibility
+  })
+);
+
+// app.use(cors())
 
 // ── Webhook raw-body parser (MUST be before express.json())
 // Razorpay webhook signature verification requires the raw, unparsed request body.
