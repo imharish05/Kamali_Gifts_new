@@ -55,10 +55,12 @@ const getRates = async (req, res) => {
       charge: cheapest.rate,
       courier: cheapest.courier_name,
       estimatedDays: cheapest.estimated_delivery_days,
+      codAvailable: couriers.some(c => c.cod === 1 || c.cod === true || c.cod === "1"),
       allCouriers: couriers.map((c) => ({
         name: c.courier_name,
         charge: c.rate,
         days: c.estimated_delivery_days,
+        cod: c.cod === 1 || c.cod === true || c.cod === "1",
       })),
     });
   } catch (err) {

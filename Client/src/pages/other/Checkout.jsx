@@ -31,9 +31,8 @@ const calculateTotalWeight = (items) => {
 };
 
 // ── Helper: check Shiprocket shipping rates ─────────────────────────────────
-const checkShippingServiceability = async (pincode, orderValue, weight = 0.5) => {
+const checkShippingServiceability = async (pincode, orderValue, weight = 0.5, cod = true) => {
   try {
-    const cod = true;
     const res = await api.get("/shipping/rates", {
       params: { pincode, weight, cod },
     });
@@ -42,7 +41,7 @@ const checkShippingServiceability = async (pincode, orderValue, weight = 0.5) =>
       shippingCharge: res.data.charge || 0,
       courier: res.data.courier || null,
       estimatedDays: res.data.estimatedDays || null,
-      codAvailable: cod,
+      codAvailable: res.data.codAvailable !== undefined ? res.data.codAvailable : cod,
       allCouriers: res.data.allCouriers || [],
     };
   } catch (err) {
@@ -385,7 +384,7 @@ const Checkout = () => {
     return () => { mounted = false; };
   }, []);
 
-  /* ── Check shipping rates when address changes ── */
+  /* ── Check shipping rates when address or payment method changes ── */
   useEffect(() => {
     const checkShipping = async () => {
       if (!selectedShippingAddr?.pincode) {
@@ -394,10 +393,12 @@ const Checkout = () => {
       }
       setCheckingServiceability(true);
       const totalWeight = calculateTotalWeight(checkoutItems || []);
+      const isCod = paymentMethod === "partial_cod";
       const result = await checkShippingServiceability(
         selectedShippingAddr.pincode,
         shippingPricing.subtotal,
-        totalWeight
+        totalWeight,
+        isCod
       );
       setCheckingServiceability(false);
       if (result) {
@@ -409,7 +410,7 @@ const Checkout = () => {
       }
     };
     checkShipping();
-  }, [selectedShippingAddrId, addrForm.pincode, shippingPricing.subtotal, checkoutItems, isAuthenticated]);
+  }, [selectedShippingAddrId, addrForm.pincode, shippingPricing.subtotal, checkoutItems, isAuthenticated, paymentMethod]);
 
   const handleSelectCourier = (selected) => {
     setShippingInfo((prev) => ({
