@@ -543,6 +543,39 @@ const ProductDescriptionInfo = ({
     [activeVariants, hasNewVar]
   );
 
+  const shippingInfo = useMemo(() => {
+    const rawWeight = selectedVariant?.shippingWeight ?? localProduct?.shippingWeight;
+    const rawDims = selectedVariant?.shippingDimensions ?? localProduct?.shippingDimensions;
+
+    let dimsObj = null;
+    if (rawDims) {
+      if (typeof rawDims === "object") {
+        dimsObj = rawDims;
+      } else if (typeof rawDims === "string") {
+        try { dimsObj = JSON.parse(rawDims); } catch { dimsObj = null; }
+      }
+    }
+
+    const length = dimsObj?.length != null && dimsObj.length !== "" ? parseFloat(dimsObj.length) : null;
+    const breadth = dimsObj?.breadth != null && dimsObj.breadth !== "" ? parseFloat(dimsObj.breadth) : null;
+    const height = dimsObj?.height != null && dimsObj.height !== "" ? parseFloat(dimsObj.height) : null;
+    const weight = rawWeight != null && rawWeight !== "" ? parseFloat(rawWeight) : null;
+
+    const validWeight = weight !== null && !isNaN(weight) && weight > 0;
+    const validLength = length !== null && !isNaN(length) && length > 0;
+    const validBreadth = breadth !== null && !isNaN(breadth) && breadth > 0;
+    const validHeight = height !== null && !isNaN(height) && height > 0;
+
+    return {
+      length: validLength ? length : null,
+      breadth: validBreadth ? breadth : null,
+      height: validHeight ? height : null,
+      weight: validWeight ? weight : null,
+      hasAny: validLength || validBreadth || validHeight || validWeight
+    };
+  }, [selectedVariant, localProduct]);
+
+
   const handleSelect = (key, value) => {
     // Deselecting: reset to the first in-stock variant
     if (!value) {
@@ -1094,6 +1127,7 @@ const handleBuyNow = async () => {
         </div>
       )}
 
+
       {/* Notify Me subscription */}
       {false && stockState.allowNotify && (
         <div style={{ marginTop: 10, marginBottom: 20, padding: "14px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12 }}>
@@ -1522,6 +1556,30 @@ const handleBuyNow = async () => {
 
       {/* ── Styles ── */}
       <style>{`
+        /* ── Specifications Key-Value List ── */
+        .pdp-specs-list {
+          margin: 16px 0 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .pdp-specs-row {
+          display: flex;
+          align-items: baseline;
+        }
+        .pdp-specs-label {
+          width: 170px;
+          min-width: 140px;
+          font-size: 15px;
+          font-weight: 700;
+          color: #111827;
+        }
+        .pdp-specs-value {
+          font-size: 15px;
+          font-weight: 400;
+          color: #111827;
+        }
+
         /* ── Info panel ── */
         .pdp-info {
           padding-left: 32px;

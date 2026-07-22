@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import clsx from "clsx";
 import Tab from "react-bootstrap/Tab";
@@ -86,12 +86,46 @@ const ProductDescriptionTab = ({
   productId,
   childComboId,
   reviewTargetType = "product",
+  product = null,
 }) => {
   const dispatch = useDispatch();
   const { reviews, loading, submitting, eligibility, eligibilityLoading } = useSelector((state) => state.review);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const targetId = reviewTargetType === "combo" ? childComboId : productId;
   const itemLabel = reviewTargetType === "combo" ? "combo" : "product";
+
+  const shippingInfo = useMemo(() => {
+    if (!product) return null;
+    const rawWeight = product.shippingWeight;
+    const rawDims = product.shippingDimensions;
+
+    let dimsObj = null;
+    if (rawDims) {
+      if (typeof rawDims === "object") {
+        dimsObj = rawDims;
+      } else if (typeof rawDims === "string") {
+        try { dimsObj = JSON.parse(rawDims); } catch { dimsObj = null; }
+      }
+    }
+
+    const length = dimsObj?.length != null && dimsObj.length !== "" ? parseFloat(dimsObj.length) : null;
+    const breadth = dimsObj?.breadth != null && dimsObj.breadth !== "" ? parseFloat(dimsObj.breadth) : null;
+    const height = dimsObj?.height != null && dimsObj.height !== "" ? parseFloat(dimsObj.height) : null;
+    const weight = rawWeight != null && rawWeight !== "" ? parseFloat(rawWeight) : null;
+
+    const validWeight = weight !== null && !isNaN(weight) && weight > 0;
+    const validLength = length !== null && !isNaN(length) && length > 0;
+    const validBreadth = breadth !== null && !isNaN(breadth) && breadth > 0;
+    const validHeight = height !== null && !isNaN(height) && height > 0;
+
+    return {
+      length: validLength ? length : null,
+      breadth: validBreadth ? breadth : null,
+      height: validHeight ? height : null,
+      weight: validWeight ? weight : null,
+      hasAny: validLength || validBreadth || validHeight || validWeight
+    };
+  }, [product]);
 
   const INITIAL_SHOW = 1;
   const [showAll, setShowAll]     = useState(false);
@@ -155,6 +189,11 @@ const ProductDescriptionTab = ({
               <Nav.Item>
                 <Nav.Link eventKey="productDescription">Description</Nav.Link>
               </Nav.Item>
+              {shippingInfo && shippingInfo.hasAny && (
+                <Nav.Item>
+                  <Nav.Link eventKey="productShipping">Dimensions</Nav.Link>
+                </Nav.Item>
+              )}
               <Nav.Item>
                 <Nav.Link eventKey="productReviews">
                   Reviews {reviews.length > 0 ? `(${reviews.length})` : ""}
@@ -173,6 +212,40 @@ const ProductDescriptionTab = ({
                   {productFullDesc || <span style={{ color: "#aaa" }}>No description available.</span>}
                 </div>
               </Tab.Pane>
+
+              {/* ── Shipping & Dimensions ── */}
+              {shippingInfo && shippingInfo.hasAny && (
+                <Tab.Pane eventKey="productShipping">
+                  <div style={{ padding: "10px 0" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 450 }}>
+                      {shippingInfo.length && (
+                        <div style={{ display: "flex", alignItems: "baseline" }}>
+                          <span style={{ width: 170, minWidth: 140, fontSize: 15, fontWeight: 700, color: "#111827" }}>Length</span>
+                          <span style={{ fontSize: 15, fontWeight: 400, color: "#111827" }}>{shippingInfo.length} cm</span>
+                        </div>
+                      )}
+                      {shippingInfo.breadth && (
+                        <div style={{ display: "flex", alignItems: "baseline" }}>
+                          <span style={{ width: 170, minWidth: 140, fontSize: 15, fontWeight: 700, color: "#111827" }}>Breadth</span>
+                          <span style={{ fontSize: 15, fontWeight: 400, color: "#111827" }}>{shippingInfo.breadth} cm</span>
+                        </div>
+                      )}
+                      {shippingInfo.height && (
+                        <div style={{ display: "flex", alignItems: "baseline" }}>
+                          <span style={{ width: 170, minWidth: 140, fontSize: 15, fontWeight: 700, color: "#111827" }}>Height</span>
+                          <span style={{ fontSize: 15, fontWeight: 400, color: "#111827" }}>{shippingInfo.height} cm</span>
+                        </div>
+                      )}
+                      {shippingInfo.weight && (
+                        <div style={{ display: "flex", alignItems: "baseline" }}>
+                          <span style={{ width: 170, minWidth: 140, fontSize: 15, fontWeight: 700, color: "#111827" }}>Item Weight</span>
+                          <span style={{ fontSize: 15, fontWeight: 400, color: "#111827" }}>{shippingInfo.weight} kg</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Tab.Pane>
+              )}
 
               {/* ── Reviews ── */}
               <Tab.Pane eventKey="productReviews">
