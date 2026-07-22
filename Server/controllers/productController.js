@@ -10,7 +10,7 @@ const PRODUCT_INCLUDE = [
   {
     model: Variant,
     as: "Variants",
-    attributes: ["id", "variantName", "mrp", "salesPrice", "stock", "sku", "attributes", "status", "image", "stockStatus", "warningThreshold"],
+    attributes: ["id", "variantName", "mrp", "salesPrice", "stock", "sku", "attributes", "status", "image", "stockStatus", "warningThreshold", "shippingWeight", "shippingDimensions"],
     required: false,
   },
   {
