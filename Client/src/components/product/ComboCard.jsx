@@ -23,7 +23,7 @@ function getFirstProductImg(comboProducts) {
 }
 
 const ComboCard = ({ combo, spaceBottomClass }) => {
-  const comboPrice = parseFloat(combo.comboPrice || 0);
+  const comboPrice = parseFloat(combo.comboPrice !== undefined && combo.comboPrice !== null ? combo.comboPrice : (combo.price || 0));
   const originalPrice = parseFloat(combo.originalPrice || 0);
   const hasSavings = originalPrice > comboPrice && comboPrice > 0;
   const savingsPct = hasSavings

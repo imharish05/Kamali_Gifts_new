@@ -250,6 +250,7 @@ const getAllProducts = async (req, res, next) => {
           id: cc.id,
           name: cc.name,
           price: comboPrice,
+          comboPrice: comboPrice,
           originalPrice: originalPrice,
           discount: discountPct,
           image: imagesList,
