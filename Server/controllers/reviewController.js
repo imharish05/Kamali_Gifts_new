@@ -241,6 +241,8 @@ const create = async (req, res) => {
       return res.status(403).json({ message: eligibility.message });
     }
 
+    const images = req.files ? req.files.map((file) => `/uploads/reviews/${file.filename}`) : [];
+
     const review = await Review.create({
       productId: productId || null,
       childComboId: childComboId || null,
@@ -249,6 +251,7 @@ const create = async (req, res) => {
       feedback: String(feedback).trim(),
       rating: ratingValue,
       status: "Pending",
+      images,
     });
 
     res.status(201).json(review);

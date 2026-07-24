@@ -182,7 +182,8 @@ const startServer = async () => {
       await sequelize.query("ALTER TABLE cart_items ADD COLUMN customisation_details JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE order_items ADD COLUMN customisation_details JSON NULL;").catch(() => {});
       await sequelize.query("ALTER TABLE Variants MODIFY COLUMN image TEXT;").catch(() => {});
-      console.log("✅ Users, products, variants and orders table columns verified");
+      await sequelize.query("ALTER TABLE reviews ADD COLUMN images JSON NULL;").catch(() => {});
+      console.log("✅ Users, products, variants, orders and reviews table columns verified");
     } catch (alterErr) {
       console.warn("⚠️ Column alter query failed (ignoring):", alterErr.message);
     }

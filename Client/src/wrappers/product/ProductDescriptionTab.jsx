@@ -56,6 +56,13 @@ const ReviewCard = ({ review }) => {
           </div>
         </div>
         <p style={{ color: "#555", fontSize: 14, lineHeight: 1.7, margin: 0 }}>{review.feedback}</p>
+        {review.images && review.images.length > 0 && (
+          <div style={{ display: "flex", gap: 10, marginTop: 15, flexWrap: "wrap" }}>
+            {review.images.map((img, idx) => (
+              <img key={idx} src={`${process.env.REACT_APP_API_URL || "http://localhost:5000"}${img}`} alt="Review" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -131,6 +138,7 @@ const ProductDescriptionTab = ({
   const [showAll, setShowAll]     = useState(false);
   const [rating, setRating]       = useState(0);
   const [feedback, setFeedback]   = useState("");
+  const [images, setImages]       = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [ratingErr, setRatingErr] = useState(false);
   const showReviewForm = isAuthenticated && eligibility?.eligible;
@@ -142,6 +150,7 @@ const ProductDescriptionTab = ({
     setSubmitted(false);
     setRating(0);
     setFeedback("");
+    setImages([]);
     setRatingErr(false);
   }, [targetId]);
 
@@ -165,17 +174,22 @@ const ProductDescriptionTab = ({
     if (!rating) { setRatingErr(true); return; }
     setRatingErr(false);
 
-    const payload = {
-      feedback,
-      rating,
-      ...(reviewTargetType === "combo" ? { childComboId: targetId } : { productId: targetId }),
-    };
+    const payload = new FormData();
+    payload.append("feedback", feedback);
+    payload.append("rating", rating);
+    if (reviewTargetType === "combo") payload.append("childComboId", targetId);
+    else payload.append("productId", targetId);
+    
+    Array.from(images).forEach((file) => {
+      payload.append("images", file);
+    });
 
     const ok = await submitReview(dispatch, payload);
     if (ok) {
       setSubmitted(true);
       setRating(0);
       setFeedback("");
+      setImages([]);
       getReviewEligibilityByTarget(dispatch, { targetType: reviewTargetType, id: targetId });
     }
   };
@@ -371,6 +385,31 @@ const ProductDescriptionTab = ({
                                     required
                                     style={{ minHeight: 100 }}
                                   />
+                                  <div style={{ marginBottom: 15, marginTop: 15 }}>
+                                    <span style={{ display: "block", marginBottom: 8, fontWeight: 600, fontSize: 13 }}>Attach Images (Max 5):</span>
+                                    <input 
+                                      type="file" 
+                                      multiple 
+                                      accept="image/*" 
+                                      onChange={(e) => {
+                                        const selected = Array.from(e.target.files);
+                                        if (selected.length > 5) {
+                                          alert("You can only upload up to 5 images.");
+                                          setImages(selected.slice(0, 5));
+                                        } else {
+                                          setImages(selected);
+                                        }
+                                      }} 
+                                      style={{ fontSize: 13 }}
+                                    />
+                                    {images.length > 0 && (
+                                      <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+                                        {Array.from(images).map((file, idx) => (
+                                          <img key={idx} src={URL.createObjectURL(file)} alt="Preview" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 4, border: "1px solid #ddd" }} />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                   <input
                                     type="submit"
                                     value={submitting ? "Submitting…" : "Submit Review"}
