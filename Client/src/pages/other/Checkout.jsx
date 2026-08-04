@@ -23,18 +23,18 @@ import { loginSuccess, storePendingAutoLogin } from "../../store/slices/authSlic
 const calculateTotalWeight = (items) => {
   let total = 0;
   (items || []).forEach((item) => {
-    // Default to 0.2 kg (200g) if shippingWeight is not set or is 0
-    const w = parseFloat(item.shippingWeight) || 0.2;
+    const rawWeight = item.selectedVariant?.shippingWeight ?? item.shippingWeight;
+    const w = parseFloat(rawWeight) || 0.2;
     total += w * item.quantity;
   });
-  return parseFloat(total.toFixed(3));
+  return parseFloat(Math.max(0.1, total).toFixed(3));
 };
 
 // ── Helper: check Shiprocket shipping rates ─────────────────────────────────
 const checkShippingServiceability = async (pincode, orderValue, weight = 0.5, cod = true) => {
   try {
     const res = await api.get("/shipping/rates", {
-      params: { pincode, weight, cod },
+      params: { pincode, weight, cod, orderValue },
     });
     return {
       serviceable: res.data.serviceable,
@@ -293,6 +293,7 @@ const Checkout = () => {
         ...prev,
         ...navState,
         subtotal: base,
+        shipping: 0, // always reset; real shipping set by serviceability check
         couponDiscount: navState.couponCode ? navState.couponDiscount : prev.couponDiscount,
         couponCode: navState.couponCode || prev.couponCode || null,
         couponType: navState.couponType || prev.couponType || null,
@@ -421,6 +422,21 @@ const Checkout = () => {
     }));
     setShippingPricing((prev) => withGrandTotal({ ...prev, shipping: selected.charge }));
     setCourierModalOpen(false);
+  };
+
+  const handleCheckoutQtyChange = (item, delta) => {
+    const newQty = item.quantity + delta;
+    if (newQty < 1) return;
+    const updatedCheckout = (checkoutItems || []).map((i) =>
+      i.cartItemId === item.cartItemId ? { ...i, quantity: newQty } : i
+    );
+    dispatch(replaceCheckoutItems(updatedCheckout));
+    if (checkoutSource === "cart") {
+      const updatedCart = (cartItems || []).map((i) =>
+        i.cartItemId === item.cartItemId ? { ...i, quantity: newQty } : i
+      );
+      dispatch(replaceCart(updatedCart));
+    }
   };
 
   /* ── Mount-time inventory & price revalidation ── */
@@ -2101,12 +2117,8 @@ const Checkout = () => {
                   {/* Price Breakdown */}
                   <div className="kco-sum-rows">
                     <div className="kco-sum-row">
-                      <span>Subtotal (before GST)</span>
-                      <span>₹{shippingPricing.subtotalBeforeGst.toFixed(2)}</span>
-                    </div>
-                    <div className="kco-sum-row">
-                      <span style={{ color: "#555" }}>GST (18%)</span>
-                      <span style={{ color: "#555" }}>+ ₹{shippingPricing.gstAmount.toFixed(2)}</span>
+                      <span>Subtotal</span>
+                      <span>₹{shippingPricing.subtotal.toFixed(2)}</span>
                     </div>
 
                     {checkingServiceability && (

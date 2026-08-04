@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import cogoToast from "cogo-toast";
 import api from "../../api/axios";
 import { addToCart, addToCartSilent, increaseQuantity, deleteFromCart, decreaseQuantity, deleteAllFromCart } from "../slices/cart-slice";
+import { replaceCheckoutItems } from "../slices/checkout-slice";
 import { store } from "../store";
 import { resolveImageAsArray } from "../../helpers/imageUrl";
 
@@ -155,12 +156,28 @@ export const increaseQuantityService = async (product) => {
   // Guest: just update Redux
   if (!isAuthed()) {
     dispatch(increaseQuantity({ cartItemId: product.cartItemId }));
+    // Sync checkout slice
+    const checkoutItems = store.getState().checkout?.items || [];
+    const updatedCheckout = checkoutItems.map(item =>
+      item.cartItemId === product.cartItemId ? { ...item, quantity: item.quantity + 1 } : item
+    );
+    if (updatedCheckout.some(i => i.cartItemId === product.cartItemId)) {
+      dispatch(replaceCheckoutItems(updatedCheckout));
+    }
     return;
   }
 
   try {
     await api.patch(`/cart/increase/${product.cartItemId}`);
     dispatch(increaseQuantity({ cartItemId: product.cartItemId }));
+    // Sync checkout slice
+    const checkoutItems = store.getState().checkout?.items || [];
+    const updatedCheckout = checkoutItems.map(item =>
+      item.cartItemId === product.cartItemId ? { ...item, quantity: item.quantity + 1 } : item
+    );
+    if (updatedCheckout.some(i => i.cartItemId === product.cartItemId)) {
+      dispatch(replaceCheckoutItems(updatedCheckout));
+    }
   } catch (err) {
     cogoToast.error("Could not update quantity", { position: "top-center" });
     console.log(err);
@@ -183,12 +200,28 @@ export const decreaseQuantityService = async (dispatchOrProduct, optionalProduct
   // Guest: just update Redux
   if (!isAuthed()) {
     dispatch(decreaseQuantity(product));
+    // Sync checkout slice
+    const checkoutItems = store.getState().checkout?.items || [];
+    const updatedCheckout = checkoutItems
+      .map(item => item.cartItemId === product.cartItemId ? { ...item, quantity: item.quantity - 1 } : item)
+      .filter(item => item.quantity > 0);
+    if (checkoutItems.some(i => i.cartItemId === product.cartItemId)) {
+      dispatch(replaceCheckoutItems(updatedCheckout));
+    }
     return;
   }
 
   try {
     await api.patch(`/cart/decrease/${product.cartItemId}`);
     dispatch(decreaseQuantity(product));
+    // Sync checkout slice
+    const checkoutItems = store.getState().checkout?.items || [];
+    const updatedCheckout = checkoutItems
+      .map(item => item.cartItemId === product.cartItemId ? { ...item, quantity: item.quantity - 1 } : item)
+      .filter(item => item.quantity > 0);
+    if (checkoutItems.some(i => i.cartItemId === product.cartItemId)) {
+      dispatch(replaceCheckoutItems(updatedCheckout));
+    }
   } catch (err) {
     cogoToast.error("Could not update quantity", { position: "top-center" });
     console.log(err);

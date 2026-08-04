@@ -42,10 +42,12 @@ async function getPickupLocations() {
   return data?.data?.shipping_address || [];
 }
 
-async function getShippingRates({ pickupPincode, deliveryPincode, weight, cod }) {
-  const data = await shiprocketGet(
-    `/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${deliveryPincode}&weight=${weight}&cod=${cod ? 1 : 0}`
-  );
+async function getShippingRates({ pickupPincode, deliveryPincode, weight, cod, declaredValue }) {
+  let url = `/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${deliveryPincode}&weight=${weight}&cod=${cod ? 1 : 0}`;
+  if (declaredValue && Number(declaredValue) > 0) {
+    url += `&declared_goods_value=${Number(declaredValue)}`;
+  }
+  const data = await shiprocketGet(url);
   return data?.data?.available_courier_companies || [];
 }
 

@@ -22,7 +22,7 @@ async function getPickupPincode() {
 // GET /api/shipping/rates?pincode=641104&weight=0.5&cod=true
 const getRates = async (req, res) => {
   try {
-    const { pincode, weight = 0.5, cod = "false" } = req.query;
+    const { pincode, weight = 0.5, cod = "false", orderValue = 0 } = req.query;
 
     if (!pincode || String(pincode).length !== 6) {
       return res.status(400).json({ message: "Valid 6-digit pincode required" });
@@ -35,6 +35,7 @@ const getRates = async (req, res) => {
       deliveryPincode: pincode,
       weight: Number(weight),
       cod: cod === "true",
+      declaredValue: Number(orderValue),
     });
 
     if (!couriers.length) {

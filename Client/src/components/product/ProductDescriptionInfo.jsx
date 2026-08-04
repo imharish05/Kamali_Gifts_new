@@ -816,6 +816,8 @@ const ProductDescriptionInfo = ({
         price: selectedVariant ? parseFloat(selectedVariant.salesPrice) : (localProduct.price || 0),
         quantity: quantityCount,
         customisationDetails: localProduct?.isCustomisable ? customisationDetails : null,
+        shippingWeight: selectedVariant?.shippingWeight ?? localProduct?.shippingWeight ?? null,
+        shippingDimensions: selectedVariant?.shippingDimensions ?? localProduct?.shippingDimensions ?? null,
       });
     } catch (err) {
       console.error("Failed to add to cart:", err);
@@ -935,6 +937,8 @@ const handleBuyNow = async () => {
         isPartialCodAvailable: localProduct.isPartialCodAvailable !== false,
         customisationDetails: localProduct?.isCustomisable ? customisationDetails : null,
         customisationFields: parsedCustomisationFields || null,
+        shippingWeight: selectedVariant?.shippingWeight ?? localProduct?.shippingWeight ?? null,
+        shippingDimensions: selectedVariant?.shippingDimensions ?? localProduct?.shippingDimensions ?? null,
       };
 
       dispatch(createBuyNowCheckout(buyNowItem));
@@ -1001,6 +1005,9 @@ const handleBuyNow = async () => {
         {savePct > 0 && (
           <span className="pdp-info__save-badge">{savePct}% OFF</span>
         )}
+      </div>
+      <div style={{ fontSize: "12px", color: "#16a34a", fontWeight: "600", marginTop: "-4px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+        <span>✓</span> GST Included
       </div>
 
       {/* ── Short description ── */}

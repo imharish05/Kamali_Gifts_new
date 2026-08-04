@@ -112,7 +112,7 @@ const Catalogue = () => {
                       title={cat.label}
                       to={cat.value ? `${S}?category=${cat.value}` : S}
                       imgSrc={cat.image ? getImgUrl(cat.image) : null}
-                      subtitle={`${subs.length} Subcategories`}
+                      subtitle={subs.length > 0 ? `${subs.length} ${subs.length === 1 ? "Subcategory" : "Subcategories"}` : null}
                       pills={mappedPills}
                     />
                   );
